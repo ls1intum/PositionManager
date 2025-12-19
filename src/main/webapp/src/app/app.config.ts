@@ -11,8 +11,25 @@ import Aura from '@primeuix/themes/aura';
 import { routes } from './app.routes';
 import { AuthService, authInterceptor } from './core/auth';
 
-function initializeKeycloak(authService: AuthService) {
-  return () => authService.init();
+/**
+ * Only initialize Keycloak if returning from OAuth callback.
+ * This allows the landing page to load instantly without contacting Keycloak.
+ */
+function initializeKeycloakIfCallback(authService: AuthService) {
+  return () => {
+    const hash = window.location.hash;
+    const search = window.location.search;
+    const hasCallback =
+      hash.includes('code=') ||
+      hash.includes('error=') ||
+      search.includes('code=') ||
+      search.includes('error=');
+
+    if (hasCallback) {
+      return authService.init();
+    }
+    return Promise.resolve(true);
+  };
 }
 
 export const appConfig: ApplicationConfig = {
@@ -27,7 +44,7 @@ export const appConfig: ApplicationConfig = {
     }),
     {
       provide: APP_INITIALIZER,
-      useFactory: initializeKeycloak,
+      useFactory: initializeKeycloakIfCallback,
       deps: [AuthService],
       multi: true,
     },

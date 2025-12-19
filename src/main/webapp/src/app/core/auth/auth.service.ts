@@ -16,20 +16,55 @@ export interface User {
 })
 export class AuthService {
   private keycloak: Keycloak | null = null;
+  private initPromise: Promise<boolean> | null = null;
   private readonly _isAuthenticated = signal(false);
   private readonly _user = signal<User | null>(null);
   private readonly _token = signal<string | null>(null);
+  private readonly _initialized = signal(false);
 
   readonly isAuthenticated = this._isAuthenticated.asReadonly();
   readonly user = this._user.asReadonly();
   readonly token = this._token.asReadonly();
+  readonly initialized = this._initialized.asReadonly();
 
   readonly isAdmin = computed(() => this.hasRole('admin'));
   readonly isJobManager = computed(() => this.hasRole('job_manager'));
   readonly isProfessor = computed(() => this.hasRole('professor'));
   readonly isEmployee = computed(() => this.hasRole('employee'));
 
+  /**
+   * Check if URL contains OAuth callback parameters
+   */
+  private hasOAuthCallback(): boolean {
+    const hash = window.location.hash;
+    const search = window.location.search;
+    return (
+      hash.includes('code=') ||
+      hash.includes('error=') ||
+      search.includes('code=') ||
+      search.includes('error=')
+    );
+  }
+
+  /**
+   * Initialize Keycloak - only processes OAuth callback if present
+   */
   async init(): Promise<boolean> {
+    // Return existing promise if already initializing
+    if (this.initPromise) {
+      return this.initPromise;
+    }
+
+    // Skip initialization if no OAuth callback and already checked
+    if (this._initialized() && !this.hasOAuthCallback()) {
+      return this._isAuthenticated();
+    }
+
+    this.initPromise = this.doInit();
+    return this.initPromise;
+  }
+
+  private async doInit(): Promise<boolean> {
     this.keycloak = new Keycloak({
       url: environment.keycloak.url,
       realm: environment.keycloak.realm,
@@ -39,18 +74,25 @@ export class AuthService {
     try {
       const authenticated = await this.keycloak.init({
         pkceMethod: 'S256',
+        redirectUri: window.location.origin + '/positions',
       });
 
       if (authenticated) {
         this.updateUserInfo();
         this.setupTokenRefresh();
+        // Clean up URL after successful authentication
+        if (this.hasOAuthCallback()) {
+          window.history.replaceState({}, '', window.location.pathname);
+        }
       }
 
       this._isAuthenticated.set(authenticated);
+      this._initialized.set(true);
       return authenticated;
     } catch (error) {
       console.error('Keycloak initialization failed:', error);
       this._isAuthenticated.set(false);
+      this._initialized.set(true);
       return false;
     }
   }
