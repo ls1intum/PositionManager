@@ -14,7 +14,7 @@ RUN npm run build
 # Serve the production build with Caddy
 FROM caddy:2-alpine AS runner
 
-COPY --from=builder /app/dist /srv
+COPY --from=builder /app/dist/StaffPlan/browser /srv
 COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
 
 RUN chmod +x /docker-entrypoint.sh && \
