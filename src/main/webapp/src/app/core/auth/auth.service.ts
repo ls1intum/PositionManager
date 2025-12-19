@@ -38,8 +38,6 @@ export class AuthService {
 
     try {
       const authenticated = await this.keycloak.init({
-        onLoad: 'check-sso',
-        silentCheckSsoRedirectUri: window.location.origin + '/assets/silent-check-sso.html',
         pkceMethod: 'S256',
       });
 
@@ -57,11 +55,13 @@ export class AuthService {
     }
   }
 
-  async login(): Promise<void> {
+  async login(redirectUri?: string): Promise<void> {
     if (!this.keycloak) {
       await this.init();
     }
-    await this.keycloak?.login();
+    await this.keycloak?.login({
+      redirectUri: redirectUri ?? window.location.origin + '/positions',
+    });
   }
 
   async logout(): Promise<void> {
