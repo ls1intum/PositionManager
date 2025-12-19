@@ -21,6 +21,11 @@ public class CurrentUserProvider {
    private final AuthenticationService authenticationService;
    private User cachedUser;
 
+   /**
+    * Returns the currently authenticated user.
+    *
+    * @return the authenticated user
+    */
    public User getUser() {
       if (cachedUser == null) {
          Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -33,6 +38,11 @@ public class CurrentUserProvider {
       return cachedUser;
    }
 
+   /**
+    * Returns the research group of the current user or throws an exception if not assigned.
+    *
+    * @return the research group of the current user
+    */
    public ResearchGroup getResearchGroupOrThrow() {
       ResearchGroup researchGroup = getUser().getResearchGroup();
       if (!canSeeAllResearchGroups() && researchGroup == null) {
@@ -74,6 +84,11 @@ public class CurrentUserProvider {
       }
    }
 
+   /**
+    * Asserts that the current user can access the given research group.
+    *
+    * @param target the research group to check access for
+    */
    public void assertCanAccessResearchGroup(ResearchGroup target) {
       if(target != null && target.isArchived()){
          throw new AccessDeniedException("The research group is archived.");

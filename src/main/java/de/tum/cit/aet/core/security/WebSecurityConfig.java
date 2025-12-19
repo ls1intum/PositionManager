@@ -33,6 +33,14 @@ public class WebSecurityConfig {
         return new RegisterSessionAuthenticationStrategy(new SessionRegistryImpl());
     }
 
+    /**
+     * Configures the security filter chain for HTTP requests.
+     *
+     * @param http the HTTP security configuration
+     * @param corsConfigurationSource the CORS configuration source
+     * @return the configured security filter chain
+     * @throws Exception if configuration fails
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
         http

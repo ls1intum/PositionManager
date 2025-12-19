@@ -99,6 +99,12 @@ public class User {
         return groups.isEmpty();
     }
 
+    /**
+     * Checks if the user has any of the specified groups.
+     *
+     * @param groups the group names to check
+     * @return true if the user has any of the specified groups
+     */
     public boolean hasAnyGroup(String...groups) {
         for (String group : groups) {
             for (UserGroup userGroup : getGroups()) {
@@ -111,6 +117,12 @@ public class User {
         return false;
     }
 
+    /**
+     * Checks if the given user has full access to this user's data.
+     *
+     * @param user the user to check access for
+     * @return true if the user has full access
+     */
     public boolean hasFullAccess(User user) {
         if (user.hasAnyGroup("admin", "job_manager")) {
             return true;

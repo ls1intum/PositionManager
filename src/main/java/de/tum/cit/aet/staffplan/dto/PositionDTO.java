@@ -30,6 +30,9 @@ public record PositionDTO(
         LocalDate expectedExitDate,
         UUID researchGroupId
 ) {
+    /**
+     * Creates a PositionDTO from a Position entity.
+     */
     public static PositionDTO fromEntity(Position position) {
         return new PositionDTO(
                 position.getId(),

@@ -23,6 +23,12 @@ public class PositionResource {
     private final PositionService positionService;
     private final CurrentUserProvider currentUserProvider;
 
+    /**
+     * Returns all positions, optionally filtered by research group.
+     *
+     * @param researchGroupId optional research group ID to filter by
+     * @return list of positions
+     */
     @GetMapping
     public ResponseEntity<List<PositionDTO>> getPositions(
             @RequestParam(required = false) UUID researchGroupId) {
@@ -38,6 +44,14 @@ public class PositionResource {
         return ResponseEntity.ok(positions);
     }
 
+    /**
+     * Imports positions from a CSV file.
+     *
+     * @param file the CSV file to import
+     * @param researchGroupId optional research group ID to assign positions to
+     * @return import result with count of imported positions
+     * @throws IOException if file reading fails
+     */
     @PostMapping("/import")
     public ResponseEntity<Map<String, Object>> importPositions(
             @RequestParam("file") MultipartFile file,
@@ -62,6 +76,12 @@ public class PositionResource {
         ));
     }
 
+    /**
+     * Deletes positions, optionally filtered by research group.
+     *
+     * @param researchGroupId optional research group ID to filter by
+     * @return empty response on success
+     */
     @DeleteMapping
     public ResponseEntity<Void> deletePositions(
             @RequestParam(required = false) UUID researchGroupId) {

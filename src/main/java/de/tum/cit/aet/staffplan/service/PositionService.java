@@ -79,8 +79,12 @@ public class PositionService {
         int commas = headerLine.length() - headerLine.replace(",", "").length();
         int tabs = headerLine.length() - headerLine.replace("\t", "").length();
 
-        if (tabs > semicolons && tabs > commas) return '\t';
-        if (semicolons > commas) return ';';
+        if (tabs > semicolons && tabs > commas) {
+            return '\t';
+        }
+        if (semicolons > commas) {
+            return ';';
+        }
         return ',';
     }
 
@@ -164,26 +168,47 @@ public class PositionService {
                     .replace("ß", "ss");
 
             // Match various possible header names
-            if (header.contains("stellenplanrelevanz")) indices[0] = i;
-            else if (header.equals("objektid") || header.equals("objekt id") || header.equals("object id")) indices[1] = i;
-            else if (header.equals("sta") || header.equals("status")) indices[2] = i;
-            else if (header.contains("objektkurzel") || header.contains("object code")) indices[3] = i;
-            else if (header.contains("objektbezeichnung") || header.contains("object description") || header.contains("bezeichnung")) indices[4] = i;
-            else if (header.contains("wert stelle") || header.contains("position value")) indices[5] = i;
-            else if (header.equals("department id") || header.equals("departmentid")) indices[6] = i;
-            else if (header.contains("organisationseinheit") || header.contains("organization")) indices[7] = i;
-            else if (header.contains("trfgr") || header.contains("tariff")) indices[8] = i;
-            else if (header.contains("bsgrd") || header.contains("base grade")) indices[9] = i;
-            else if (header.contains("prozt") || header.contains("prozent") || header.contains("percentage") || header.equals("%")) indices[10] = i;
-            else if (header.contains("beginn") || header.equals("start") || header.equals("start date") || header.contains("start_date")) indices[11] = i;
-            else if (header.contains("ende") || header.equals("end") || header.equals("end date") || header.contains("end_date")) indices[12] = i;
-            else if (header.equals("fonds") || header.equals("fund")) indices[13] = i;
-            else if (header.equals("department id2") || header.equals("departmentid2")) indices[14] = i;
-            else if (header.contains("persnr") || header.contains("personnel")) indices[15] = i;
-            else if (header.contains("mitarbeitergruppe") || header.contains("employee group")) indices[16] = i;
-            else if (header.contains("mitarbeiterkreis") || header.contains("employee circle")) indices[17] = i;
-            else if (header.contains("eintrittsdatum") || header.contains("entry date")) indices[18] = i;
-            else if (header.contains("voraussichtlicher austritt") || header.contains("expected exit")) indices[19] = i;
+            if (header.contains("stellenplanrelevanz")) {
+                indices[0] = i;
+            } else if (header.equals("objektid") || header.equals("objekt id") || header.equals("object id")) {
+                indices[1] = i;
+            } else if (header.equals("sta") || header.equals("status")) {
+                indices[2] = i;
+            } else if (header.contains("objektkurzel") || header.contains("object code")) {
+                indices[3] = i;
+            } else if (header.contains("objektbezeichnung") || header.contains("object description") || header.contains("bezeichnung")) {
+                indices[4] = i;
+            } else if (header.contains("wert stelle") || header.contains("position value")) {
+                indices[5] = i;
+            } else if (header.equals("department id") || header.equals("departmentid")) {
+                indices[6] = i;
+            } else if (header.contains("organisationseinheit") || header.contains("organization")) {
+                indices[7] = i;
+            } else if (header.contains("trfgr") || header.contains("tariff")) {
+                indices[8] = i;
+            } else if (header.contains("bsgrd") || header.contains("base grade")) {
+                indices[9] = i;
+            } else if (header.contains("prozt") || header.contains("prozent") || header.contains("percentage") || header.equals("%")) {
+                indices[10] = i;
+            } else if (header.contains("beginn") || header.equals("start") || header.equals("start date") || header.contains("start_date")) {
+                indices[11] = i;
+            } else if (header.contains("ende") || header.equals("end") || header.equals("end date") || header.contains("end_date")) {
+                indices[12] = i;
+            } else if (header.equals("fonds") || header.equals("fund")) {
+                indices[13] = i;
+            } else if (header.equals("department id2") || header.equals("departmentid2")) {
+                indices[14] = i;
+            } else if (header.contains("persnr") || header.contains("personnel")) {
+                indices[15] = i;
+            } else if (header.contains("mitarbeitergruppe") || header.contains("employee group")) {
+                indices[16] = i;
+            } else if (header.contains("mitarbeiterkreis") || header.contains("employee circle")) {
+                indices[17] = i;
+            } else if (header.contains("eintrittsdatum") || header.contains("entry date")) {
+                indices[18] = i;
+            } else if (header.contains("voraussichtlicher austritt") || header.contains("expected exit")) {
+                indices[19] = i;
+            }
 
             if (indices[4] == i || indices[2] == i || indices[10] == i || indices[11] == i || indices[12] == i) {
                 log.info("Mapped header '{}' (index {}) to column {}", headers[i], i,

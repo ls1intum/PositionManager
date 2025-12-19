@@ -39,6 +39,12 @@ public class AuthenticationService {
                 .orElseGet(() -> updateAuthenticatedUser(jwt));
     }
 
+    /**
+     * Updates or creates the authenticated user from JWT token data.
+     *
+     * @param jwt the JWT authentication token
+     * @return the updated or created user
+     */
     @Transactional
     public User updateAuthenticatedUser(JwtAuthenticationToken jwt) {
         Map<String, Object> attributes = jwt.getTokenAttributes();
