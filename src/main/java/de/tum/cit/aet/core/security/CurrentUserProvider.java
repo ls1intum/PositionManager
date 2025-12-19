@@ -73,7 +73,7 @@ public class CurrentUserProvider {
          assertCanAccessResearchGroup(target);
       }
    }
-   
+
    public void assertCanAccessResearchGroup(ResearchGroup target) {
       if(target != null && target.isArchived()){
          throw new AccessDeniedException("The research group is archived.");

@@ -11,19 +11,16 @@ ENV NODE_ENV=production
 
 RUN npm run build
 
-# Serve the production build with nginx
-FROM nginx:1.29-alpine AS runner
+# Serve the production build with Caddy
+FROM caddy:2-alpine AS runner
 
-# Install curl for health checks
-RUN apk add --no-cache curl
-
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/dist /srv
 COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
 
-RUN chmod +x /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh && \
+    echo ':80 { root * /srv; file_server; try_files {path} /index.html; encode gzip }' > /etc/caddy/Caddyfile
 
 EXPOSE 80
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]

@@ -98,9 +98,12 @@ export class AuthService {
     }
 
     const tokenParsed = this.keycloak.tokenParsed as Record<string, unknown>;
-    const resourceAccess = tokenParsed['resource_access'] as Record<string, { roles: string[] }> | undefined;
+    const resourceAccess = tokenParsed['resource_access'] as
+      | Record<string, { roles: string[] }>
+      | undefined;
     const clientRoles = resourceAccess?.[environment.keycloak.clientId]?.roles ?? [];
-    const realmRoles = (tokenParsed['realm_access'] as { roles: string[] } | undefined)?.roles ?? [];
+    const realmRoles =
+      (tokenParsed['realm_access'] as { roles: string[] } | undefined)?.roles ?? [];
 
     this._user.set({
       id: tokenParsed['sub'] as string,

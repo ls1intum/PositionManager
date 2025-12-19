@@ -5,9 +5,7 @@ export const routes: Routes = [
   {
     path: 'positions',
     loadComponent: () =>
-      import('./features/positions/positions-page.component').then(
-        (m) => m.PositionsPageComponent
-      ),
+      import('./features/positions/positions-page.component').then((m) => m.PositionsPageComponent),
     canActivate: [authGuard],
   },
   {

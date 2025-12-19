@@ -1,6 +1,5 @@
 package de.tum.cit.aet.usermanagement.service;
 
-import de.tum.cit.aet.core.exceptions.ResourceNotFoundException;
 import de.tum.cit.aet.usermanagement.domain.User;
 import de.tum.cit.aet.usermanagement.domain.UserGroup;
 import de.tum.cit.aet.usermanagement.domain.key.UserGroupId;
@@ -10,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -101,7 +99,7 @@ public class AuthenticationService {
 
         return userRepository.save(user);
     }
-    
+
     private String getUniversityId(JwtAuthenticationToken jwt) {
         return jwt.getName();
     }

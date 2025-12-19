@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { Tooltip } from 'primeng/tooltip';
 import { Position } from '../position.model';
 
@@ -45,7 +40,7 @@ interface GanttRow {
                 pTooltip
                 [tooltipOptions]="{
                   tooltipLabel: getTooltip(row.position),
-                  tooltipPosition: 'top'
+                  tooltipPosition: 'top',
                 }"
               >
                 @if (row.position.percentage !== null) {
