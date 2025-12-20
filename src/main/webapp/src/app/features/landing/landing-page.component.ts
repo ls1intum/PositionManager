@@ -1,17 +1,19 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, effect } from '@angular/core';
 import { Router } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../../core/auth';
 
 @Component({
   selector: 'app-landing-page',
-  imports: [ButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="landing-container">
-      <h1>StaffPlan</h1>
-      <p>Welcome to StaffPlan - Manage your staff positions efficiently.</p>
-      <p-button label="Login" (onClick)="login()" />
+      @if (authService.isLoading()) {
+        <p>Loading...</p>
+      } @else {
+        <h2>Welcome to StaffPlan</h2>
+        <p>Manage your staff positions efficiently.</p>
+        <p>Please use the Login button in the header to access the application.</p>
+      }
     </div>
   `,
   styles: `
@@ -20,34 +22,32 @@ import { AuthService } from '../../core/auth';
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 80vh;
+      min-height: 60vh;
       text-align: center;
       padding: 2rem;
     }
 
-    h1 {
-      font-size: 2.5rem;
+    h2 {
+      font-size: 2rem;
       margin-bottom: 1rem;
     }
 
     p {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
       color: var(--text-color-secondary);
     }
   `,
 })
-export class LandingPageComponent implements OnInit {
-  private readonly authService = inject(AuthService);
+export class LandingPageComponent {
+  protected readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
-  ngOnInit(): void {
-    // Redirect authenticated users to positions
-    if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/positions']);
-    }
-  }
-
-  login(): void {
-    this.authService.login();
+  constructor() {
+    // Redirect authenticated users to positions once loading completes
+    effect(() => {
+      if (!this.authService.isLoading() && this.authService.isAuthenticated()) {
+        this.router.navigate(['/positions']);
+      }
+    });
   }
 }

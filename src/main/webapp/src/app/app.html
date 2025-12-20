@@ -5,7 +5,9 @@
     </a>
   </div>
   <nav class="nav">
-    @if (authService.isAuthenticated()) {
+    @if (authService.isLoading()) {
+      <span>Loading...</span>
+    } @else if (authService.isAuthenticated()) {
       <a routerLink="/positions" routerLinkActive="active" class="nav-link">Positions</a>
       <span class="user-info">
         {{ authService.user()?.firstName }} {{ authService.user()?.lastName }}
@@ -25,15 +27,5 @@
 </header>
 
 <main class="main">
-  @if (!authService.isAuthenticated()) {
-    <div class="welcome-card">
-      <h2>Welcome to StaffPlan</h2>
-      <p>Please login to access the application.</p>
-      <button class="btn btn-primary btn-large" (click)="authService.login()">
-        Login with Keycloak
-      </button>
-    </div>
-  }
-
   <router-outlet />
 </main>
