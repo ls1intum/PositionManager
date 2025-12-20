@@ -6,15 +6,17 @@ export const authGuard: CanActivateFn = async (_route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
+  // Wait for Keycloak initialization to complete
+  if (authService.isLoading()) {
+    // APP_INITIALIZER should have completed, but just in case
+    return router.createUrlTree(['/']);
+  }
+
   if (authService.isAuthenticated()) {
     return true;
   }
 
-  // If OAuth callback just failed, redirect to landing page instead of looping
-  if (authService.callbackFailed()) {
-    return router.createUrlTree(['/']);
-  }
-
+  // Not authenticated - redirect to login
   await authService.login(window.location.origin + state.url);
   return false;
 };

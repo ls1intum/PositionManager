@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../../core/auth';
 
@@ -35,8 +36,16 @@ import { AuthService } from '../../core/auth';
     }
   `,
 })
-export class LandingPageComponent {
+export class LandingPageComponent implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+
+  ngOnInit(): void {
+    // Redirect authenticated users to positions
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/positions']);
+    }
+  }
 
   login(): void {
     this.authService.login();
