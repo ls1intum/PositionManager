@@ -14,7 +14,9 @@ export class AdminGuard implements CanActivate {
     return toObservable(this.securityStore.isLoading, { injector: this.injector }).pipe(
       filter((loading) => !loading),
       take(1),
-      switchMap(() => toObservable(this.securityStore.user, { injector: this.injector }).pipe(take(1))),
+      switchMap(() =>
+        toObservable(this.securityStore.user, { injector: this.injector }).pipe(take(1)),
+      ),
       map((user) => {
         if (user === undefined) {
           this.securityStore.signIn(this.router.url);

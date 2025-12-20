@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
 import { SecurityStore } from '../../core/security';
@@ -69,7 +76,9 @@ export class PositionsPageComponent implements OnInit {
 
   readonly positions = signal<Position[]>([]);
   readonly loading = signal(false);
-  readonly canManage = computed(() => this.securityStore.isJobManager() || this.securityStore.isAdmin());
+  readonly canManage = computed(
+    () => this.securityStore.isJobManager() || this.securityStore.isAdmin(),
+  );
 
   ngOnInit(): void {
     this.loadPositions();

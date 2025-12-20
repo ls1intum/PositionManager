@@ -175,9 +175,7 @@ export class AdminUsersComponent implements OnInit {
     this.userService.updateUserRoles(user.id, roles).subscribe({
       next: (updatedUser) => {
         // Update the user in the list
-        this.users.update((users) =>
-          users.map((u) => (u.id === updatedUser.id ? updatedUser : u))
-        );
+        this.users.update((users) => users.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
         // Update pending changes to match saved state
         this.pendingChanges.set(updatedUser.id, new Set(updatedUser.roles));
 

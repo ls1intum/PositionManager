@@ -1,7 +1,6 @@
 package de.tum.cit.aet.usermanagement.dto;
 
 import de.tum.cit.aet.usermanagement.domain.User;
-import de.tum.cit.aet.usermanagement.domain.UserGroup;
 
 import java.util.List;
 import java.util.UUID;

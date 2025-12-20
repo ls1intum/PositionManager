@@ -66,9 +66,7 @@ export class SecurityStore {
 
   private async fetchUserFromBackend(): Promise<void> {
     try {
-      const user = await firstValueFrom(
-        this.http.get<User>(`${environment.apiUrl}/v2/users/me`)
-      );
+      const user = await firstValueFrom(this.http.get<User>(`${environment.apiUrl}/v2/users/me`));
       this.user.set(user);
     } catch (error) {
       console.error('Failed to fetch user from backend:', error);
