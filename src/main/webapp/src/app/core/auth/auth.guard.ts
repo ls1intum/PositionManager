@@ -4,9 +4,15 @@ import { AuthService } from './auth.service';
 
 export const authGuard: CanActivateFn = async (_route, state) => {
   const authService = inject(AuthService);
+  const router = inject(Router);
 
   if (authService.isAuthenticated()) {
     return true;
+  }
+
+  // If OAuth callback just failed, redirect to landing page instead of looping
+  if (authService.callbackFailed()) {
+    return router.createUrlTree(['/']);
   }
 
   await authService.login(window.location.origin + state.url);

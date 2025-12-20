@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import Keycloak from 'keycloak-js';
+import type Keycloak from 'keycloak-js';
 import { environment } from '../../../environments/environment';
 
 export interface User {
@@ -21,11 +21,13 @@ export class AuthService {
   private readonly _user = signal<User | null>(null);
   private readonly _token = signal<string | null>(null);
   private readonly _initialized = signal(false);
+  private readonly _callbackFailed = signal(false);
 
   readonly isAuthenticated = this._isAuthenticated.asReadonly();
   readonly user = this._user.asReadonly();
   readonly token = this._token.asReadonly();
   readonly initialized = this._initialized.asReadonly();
+  readonly callbackFailed = this._callbackFailed.asReadonly();
 
   readonly isAdmin = computed(() => this.hasRole('admin'));
   readonly isJobManager = computed(() => this.hasRole('job_manager'));
@@ -65,7 +67,10 @@ export class AuthService {
   }
 
   private async doInit(): Promise<boolean> {
-    this.keycloak = new Keycloak({
+    const hadCallback = this.hasOAuthCallback();
+
+    const KeycloakClass = (await import('keycloak-js')).default;
+    this.keycloak = new KeycloakClass({
       url: environment.keycloak.url,
       realm: environment.keycloak.realm,
       clientId: environment.keycloak.clientId,
@@ -74,25 +79,31 @@ export class AuthService {
     try {
       const authenticated = await this.keycloak.init({
         pkceMethod: 'S256',
-        redirectUri: window.location.origin + '/positions',
       });
+
+      // Always clean URL after processing callback to prevent loops
+      if (hadCallback) {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
 
       if (authenticated) {
         this.updateUserInfo();
         this.setupTokenRefresh();
-        // Clean up URL after successful authentication
-        if (this.hasOAuthCallback()) {
-          window.history.replaceState({}, '', window.location.pathname);
-        }
       }
 
       this._isAuthenticated.set(authenticated);
       this._initialized.set(true);
+      this._callbackFailed.set(hadCallback && !authenticated);
       return authenticated;
     } catch (error) {
       console.error('Keycloak initialization failed:', error);
+      // Clean URL even on error to prevent loops
+      if (hadCallback) {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
       this._isAuthenticated.set(false);
       this._initialized.set(true);
+      this._callbackFailed.set(hadCallback);
       return false;
     }
   }
