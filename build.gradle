@@ -68,6 +68,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-json'
 
     // use newest version of nimbus-jose-jwt to avoid security issues through outdated dependencies
     implementation "com.nimbusds:nimbus-jose-jwt:10.7"
