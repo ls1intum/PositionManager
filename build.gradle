@@ -5,8 +5,6 @@ plugins {
     id 'com.github.ben-manes.versions' version '0.53.0'
     id 'org.springframework.boot' version '4.0.2'
     id 'io.spring.dependency-management' version '1.1.7'
-    id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
-//    id "org.openapi.generator" version "7.19.0"
     id "com.github.node-gradle.node" version "7.1.0"
 }
 
@@ -63,7 +61,6 @@ node {
 dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.boot:spring-boot-starter-batch'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-liquibase'
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -81,21 +78,10 @@ dependencies {
     // Lombok for boilerplate code reduction
     compileOnly 'org.projectlombok:lombok'
 
-    //Openapi dependencies
-    implementation "org.openapitools:jackson-databind-nullable:${jacksonDatabindNullableVersion}"
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1"
-    implementation("org.yaml:snakeyaml") {
-        version {
-            strictly "${snakeyaml_version}"
-            // needed to reduce the number of vulnerabilities, also see https://mvnrepository.com/artifact/org.yaml/snakeyaml
-        }
-    }
-
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-batch-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-liquibase-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
