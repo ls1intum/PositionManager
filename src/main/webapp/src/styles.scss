@@ -2,3 +2,48 @@
 @import 'primeicons/primeicons.css';
 
 /* Global styles */
+
+/* Compact dropdown panel for PrimeNG 21+ Select */
+p-select-overlay,
+.p-select-overlay,
+.p-component-overlay,
+[class*="select-overlay"],
+[class*="dropdown-panel"],
+p-overlay-panel {
+  font-size: 0.65rem !important;
+
+  input[type="text"],
+  input[class*="filter"],
+  [class*="filter-input"],
+  [class*="search"],
+  .p-inputtext {
+    font-size: 0.65rem !important;
+    padding: 0.15rem 0.3rem !important;
+    height: 1.4rem !important;
+    min-height: unset !important;
+    box-sizing: border-box !important;
+  }
+
+  [class*="header"] {
+    padding: 0.25rem !important;
+  }
+
+  [class*="items-wrapper"],
+  [class*="list-container"] {
+    max-height: 180px !important;
+  }
+
+  [class*="option"],
+  [class*="item"]:not([class*="items"]) {
+    font-size: 0.65rem !important;
+    padding: 0.2rem 0.4rem !important;
+    min-height: unset !important;
+    line-height: 1.3 !important;
+  }
+
+  svg,
+  .p-icon {
+    width: 0.7rem !important;
+    height: 0.7rem !important;
+  }
+}

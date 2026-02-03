@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
 import { FileUpload } from 'primeng/fileupload';
-import { Message } from 'primeng/message';
 import { PositionService } from '../position.service';
 
 interface UploadEvent {
@@ -9,48 +8,69 @@ interface UploadEvent {
 
 @Component({
   selector: 'app-position-upload',
-  imports: [FileUpload, Message],
+  imports: [FileUpload],
   template: `
-    <div class="upload-container">
-      <h3>Import Positions from CSV</h3>
+    <div class="upload-inline">
       <p-fileupload
         mode="basic"
         name="file"
         accept=".csv"
         [maxFileSize]="10000000"
-        chooseLabel="Choose CSV File"
-        [auto]="true"
+        chooseLabel="CSV Import"
+        chooseIcon="pi pi-upload"
+        [auto]="false"
+        [customUpload]="true"
+        styleClass="compact-upload"
         (onSelect)="onFileSelect($event)"
       />
-
       @if (uploading()) {
-        <p-message severity="info" text="Uploading..." />
+        <span class="upload-status uploading">Lädt...</span>
       }
-
       @if (successMessage(); as msg) {
-        <p-message severity="success" [text]="msg" />
+        <span class="upload-status success">{{ msg }}</span>
       }
-
       @if (errorMessage(); as msg) {
-        <p-message severity="error" [text]="msg" />
+        <span class="upload-status error">{{ msg }}</span>
       }
     </div>
   `,
   styles: `
-    .upload-container {
-      padding: 1rem;
-      border: 1px solid var(--p-surface-300);
-      border-radius: 8px;
-      margin-bottom: 1rem;
+    .upload-inline {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
 
-      h3 {
-        margin-top: 0;
-        margin-bottom: 1rem;
+    .upload-status {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+    }
+
+    .upload-status.uploading {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .upload-status.success {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .upload-status.error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    :host ::ng-deep .compact-upload {
+      .p-button {
+        font-size: 0.65rem !important;
+        padding: 0.25rem 0.5rem !important;
+        height: 1.5rem;
       }
 
-      p-message {
-        display: block;
-        margin-top: 1rem;
+      .p-button-icon {
+        font-size: 0.7rem !important;
       }
     }
   `,

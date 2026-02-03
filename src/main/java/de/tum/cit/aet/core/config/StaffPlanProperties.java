@@ -13,6 +13,7 @@ public class StaffPlanProperties {
     private String password;
     private String initialAdmin;
     private Cors cors = new Cors();
+    private Keycloak keycloak = new Keycloak();
 
     public String getUser() {
         return user;
@@ -46,6 +47,14 @@ public class StaffPlanProperties {
         this.cors = cors;
     }
 
+    public Keycloak getKeycloak() {
+        return keycloak;
+    }
+
+    public void setKeycloak(Keycloak keycloak) {
+        this.keycloak = keycloak;
+    }
+
     public static class Cors {
         private List<String> allowedOrigins;
 
@@ -55,6 +64,18 @@ public class StaffPlanProperties {
 
         public void setAllowedOrigins(List<String> allowedOrigins) {
             this.allowedOrigins = allowedOrigins;
+        }
+    }
+
+    public static class Keycloak {
+        private String clientId = "staffplan-client";
+
+        public String getClientId() {
+            return clientId;
+        }
+
+        public void setClientId(String clientId) {
+            this.clientId = clientId;
         }
     }
 }

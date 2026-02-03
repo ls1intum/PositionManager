@@ -110,7 +110,7 @@ Main configuration files:
 
 ## Build Commands
 
-### Backend (Gradle)
+### Server application (Gradle)
 
 ```bash
 # Run tests
@@ -129,7 +129,7 @@ Main configuration files:
 ./gradlew checkstyleMain
 ```
 
-### Frontend (npm)
+### Client web application (npm)
 
 ```bash
 cd src/main/webapp

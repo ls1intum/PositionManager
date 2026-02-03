@@ -31,14 +31,17 @@ public class AuthenticationService {
 
     @Transactional
     public User getAuthenticatedUser(JwtAuthenticationToken jwt) {
-        return userRepository.findByUniversityId(getUniversityId(jwt))
-                .orElseGet(() -> updateAuthenticatedUser(jwt));
+        // Always update to sync roles from JWT
+        return updateAuthenticatedUser(jwt);
     }
 
     @Transactional
     public User getAuthenticatedUserWithResearchGroup(JwtAuthenticationToken jwt) {
-        return userRepository.findByUniversityIdWithResearchGroup(getUniversityId(jwt))
-                .orElseGet(() -> updateAuthenticatedUser(jwt));
+        // Always update to sync roles from JWT
+        User user = updateAuthenticatedUser(jwt);
+        // Re-fetch with research group to ensure it's loaded
+        return userRepository.findByUniversityIdWithResearchGroup(user.getUniversityId())
+                .orElse(user);
     }
 
     /**
@@ -56,8 +59,6 @@ public class AuthenticationService {
         String email = (String) attributes.get("email");
         String firstName = (String) attributes.get("given_name");
         String lastName = (String) attributes.get("family_name");
-
-        boolean isNewUser = userRepository.findByUniversityId(universityId).isEmpty();
 
         User user = userRepository.findByUniversityId(universityId).orElseGet(() -> {
             User newUser = new User();
@@ -85,25 +86,86 @@ public class AuthenticationService {
 
         user = userRepository.save(user);
 
-        // Only assign initial admin role for new users
-        if (isNewUser) {
-            String initialAdmin = staffPlanProperties.getInitialAdmin();
-            if (initialAdmin != null && !initialAdmin.isEmpty() && universityId.equals(initialAdmin)) {
-                UserGroup adminGroup = new UserGroup();
-                UserGroupId adminGroupId = new UserGroupId();
-                adminGroupId.setUserId(user.getId());
-                adminGroupId.setRole("admin");
-                adminGroup.setUser(user);
-                adminGroup.setId(adminGroupId);
-                userGroupRepository.save(adminGroup);
+        // Sync roles from JWT token
+        syncRolesFromJwt(user, jwt);
 
-                Set<UserGroup> groups = new HashSet<>();
-                groups.add(adminGroup);
-                user.setGroups(groups);
+        return user;
+    }
+
+    /**
+     * Syncs user roles from the JWT token to the database.
+     * Extracts roles from both realm_access and resource_access (client roles).
+     */
+    private void syncRolesFromJwt(User user, JwtAuthenticationToken jwt) {
+        Map<String, Object> attributes = jwt.getTokenAttributes();
+        Set<String> jwtRoles = new HashSet<>();
+
+        // Extract realm roles
+        @SuppressWarnings("unchecked")
+        Map<String, Object> realmAccess = (Map<String, Object>) attributes.get("realm_access");
+        if (realmAccess != null) {
+            @SuppressWarnings("unchecked")
+            java.util.List<String> roles = (java.util.List<String>) realmAccess.get("roles");
+            if (roles != null) {
+                jwtRoles.addAll(roles);
             }
         }
 
-        return user;
+        // Extract client roles for staffplan-client
+        @SuppressWarnings("unchecked")
+        Map<String, Object> resourceAccess = (Map<String, Object>) attributes.get("resource_access");
+        if (resourceAccess != null) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> clientAccess = (Map<String, Object>) resourceAccess.get(staffPlanProperties.getKeycloak().getClientId());
+            if (clientAccess != null) {
+                @SuppressWarnings("unchecked")
+                java.util.List<String> clientRoles = (java.util.List<String>) clientAccess.get("roles");
+                if (clientRoles != null) {
+                    jwtRoles.addAll(clientRoles);
+                }
+            }
+        }
+
+        // Filter to only known application roles
+        Set<String> knownRoles = Set.of("admin", "job_manager", "professor", "employee");
+        Set<String> rolesToSync = new HashSet<>();
+        for (String role : jwtRoles) {
+            if (knownRoles.contains(role)) {
+                rolesToSync.add(role);
+            }
+        }
+
+        // Get current roles from database
+        Set<String> currentRoles = new HashSet<>();
+        for (UserGroup group : user.getGroups()) {
+            currentRoles.add(group.getId().getRole());
+        }
+
+        // Add new roles
+        for (String role : rolesToSync) {
+            if (!currentRoles.contains(role)) {
+                UserGroup newGroup = new UserGroup();
+                UserGroupId groupId = new UserGroupId();
+                groupId.setUserId(user.getId());
+                groupId.setRole(role);
+                newGroup.setUser(user);
+                newGroup.setId(groupId);
+                userGroupRepository.save(newGroup);
+                user.getGroups().add(newGroup);
+            }
+        }
+
+        // Remove roles that are no longer in JWT
+        Set<UserGroup> groupsToRemove = new HashSet<>();
+        for (UserGroup group : user.getGroups()) {
+            if (!rolesToSync.contains(group.getId().getRole())) {
+                groupsToRemove.add(group);
+            }
+        }
+        for (UserGroup group : groupsToRemove) {
+            user.getGroups().remove(group);
+            userGroupRepository.delete(group);
+        }
     }
 
     private String getUniversityId(JwtAuthenticationToken jwt) {

@@ -7,7 +7,6 @@ import {
   signal,
 } from '@angular/core';
 import { Button } from 'primeng/button';
-import { Card } from 'primeng/card';
 import { SecurityStore } from '../../core/security';
 import { PositionService } from './position.service';
 import { PositionUploadComponent } from './upload/position-upload.component';
@@ -16,70 +15,55 @@ import { Position } from './position.model';
 
 @Component({
   selector: 'app-positions-page',
-  imports: [Button, Card, PositionUploadComponent, PositionGanttComponent],
+  imports: [Button, PositionUploadComponent, PositionGanttComponent],
   template: `
     <div class="positions-page">
-      <p-card>
-        <ng-template #header>
-          <div class="card-header">
-            <h2>Position Overview</h2>
+      @if (loading()) {
+        <div class="loading">Positionen werden geladen...</div>
+      } @else {
+        <app-position-gantt [positions]="positions()" (clearData)="clearPositions()">
+          <div class="header-actions" header-slot>
             @if (canManage()) {
-              <div class="header-actions">
-                <p-button
-                  label="Refresh"
-                  icon="pi pi-refresh"
-                  [outlined]="true"
-                  (onClick)="loadPositions()"
-                />
-                <p-button
-                  label="Clear All"
-                  icon="pi pi-trash"
-                  severity="danger"
-                  [outlined]="true"
-                  (onClick)="clearPositions()"
-                />
-              </div>
+              <app-position-upload (uploaded)="loadPositions()" />
             }
+            <p-button
+              label="Aktualisieren"
+              icon="pi pi-refresh"
+              [outlined]="true"
+              size="small"
+              styleClass="compact-btn"
+              (onClick)="loadPositions()"
+            />
           </div>
-        </ng-template>
-
-        @if (canManage()) {
-          <app-position-upload (uploaded)="loadPositions()" />
-        }
-
-        @if (loading()) {
-          <div class="loading">Loading positions...</div>
-        } @else {
-          <app-position-gantt [positions]="positions()" />
-        }
-      </p-card>
+        </app-position-gantt>
+      }
     </div>
   `,
   styles: `
     .positions-page {
-      padding: 1rem;
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem;
-
-      h2 {
-        margin: 0;
-      }
+      padding: 0;
     }
 
     .header-actions {
       display: flex;
       gap: 0.5rem;
+      align-items: center;
     }
 
     .loading {
       padding: 2rem;
       text-align: center;
       color: var(--p-text-muted-color);
+    }
+
+    :host ::ng-deep .compact-btn {
+      font-size: 0.65rem !important;
+      padding: 0.25rem 0.5rem !important;
+      height: 1.5rem;
+
+      .p-button-icon {
+        font-size: 0.7rem !important;
+      }
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -112,12 +96,16 @@ export class PositionsPageComponent implements OnInit {
   }
 
   clearPositions(): void {
-    if (!confirm('Are you sure you want to delete all positions?')) {
+    if (!confirm('Möchten Sie wirklich alle Daten löschen?')) {
       return;
     }
     this.positionService.deletePositions().subscribe({
       next: () => {
         this.positions.set([]);
+      },
+      error: (err) => {
+        console.error('Failed to delete positions:', err);
+        alert('Fehler beim Löschen der Daten. Bitte versuchen Sie es erneut.');
       },
     });
   }

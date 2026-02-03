@@ -1,12 +1,12 @@
 plugins {
     id 'checkstyle'
     id 'java'
-    id 'com.diffplug.spotless' version '8.1.0'
+    id 'com.diffplug.spotless' version '8.2.1'
     id 'com.github.ben-manes.versions' version '0.53.0'
     id 'org.springframework.boot' version '4.0.2'
     id 'io.spring.dependency-management' version '1.1.7'
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
-    id "org.openapi.generator" version "7.17.0"
+//    id "org.openapi.generator" version "7.19.0"
     id "com.github.node-gradle.node" version "7.1.0"
 }
 
@@ -27,7 +27,7 @@ configurations {
 }
 
 wrapper {
-    gradleVersion = "9.2.1"
+    gradleVersion = "9.3.1"
 }
 
 repositories {
@@ -52,8 +52,6 @@ checkstyle {
     maxErrors = 0
 }
 
-apply from: "gradle/openapi.gradle"
-
 node {
     download = true
     version = "24.12.0"
@@ -75,17 +73,17 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 
     // use newest version of nimbus-jose-jwt to avoid security issues through outdated dependencies
-    implementation "com.nimbusds:nimbus-jose-jwt:10.6"
+    implementation "com.nimbusds:nimbus-jose-jwt:10.7"
 
     // Main database to persist entities
-    implementation 'org.postgresql:postgresql:42.7.8'
+    implementation 'org.postgresql:postgresql:42.7.9'
 
     // Lombok for boilerplate code reduction
     compileOnly 'org.projectlombok:lombok'
 
     //Openapi dependencies
     implementation "org.openapitools:jackson-databind-nullable:${jacksonDatabindNullableVersion}"
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1"
     implementation("org.yaml:snakeyaml") {
         version {
             strictly "${snakeyaml_version}"
@@ -108,6 +106,22 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+def isNonStable = { String version ->
+    def stableKeyword = ["RELEASE", "FINAL", "GA"].any { it -> version.toUpperCase().contains(it) }
+    def regex = /^[0-9,.v-]+(-r)?$/
+    return !stableKeyword && !(version ==~ regex)
+}
+
+tasks.named("dependencyUpdates").configure {
+    rejectVersionIf {
+        isNonStable(it.candidate.version)
+    }
+
+    rejectVersionIf {
+        isNonStable(it.candidate.version) && !isNonStable(it.currentVersion)
+    }
 }
 
 // Available commands:

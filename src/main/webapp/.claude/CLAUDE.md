@@ -40,6 +40,7 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use `computed()` for derived state
 - Keep state transformations pure and predictable
 - Do NOT use `mutate` on signals, use `update` or `set` instead
+- This application is zoneless. Do NOT use `NgZone.run()` or `NgZone.runOutsideAngular()`.
 
 ## Templates
 

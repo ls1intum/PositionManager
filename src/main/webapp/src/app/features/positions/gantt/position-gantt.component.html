@@ -2,25 +2,59 @@
   <!-- Filter Bar -->
   <div class="filter-bar">
     <div class="filter-item">
-      <label for="search">Search</label>
+      <label for="search">Suche</label>
       <input
         id="search"
         type="text"
         pInputText
-        placeholder="Search positions..."
+        placeholder="Stellen durchsuchen..."
         [ngModel]="searchTerm()"
         (ngModelChange)="searchTerm.set($event)"
       />
     </div>
     <div class="filter-item">
-      <label for="grade">Grade</label>
+      <label for="relevanceType">Relevanzart</label>
       <p-select
-        id="grade"
-        [options]="gradeOptions()"
-        [ngModel]="filterGrade()"
-        (ngModelChange)="filterGrade.set($event)"
-        placeholder="All Grades"
+        id="relevanceType"
+        styleClass="filter-select-wide"
+        overlayStyleClass="compact-dropdown"
+        [options]="relevanceTypeOptions()"
+        [ngModel]="filterRelevanceType()"
+        (ngModelChange)="filterRelevanceType.set($event)"
+        placeholder="Alle"
         [showClear]="true"
+        [filter]="true"
+        filterPlaceholder="Suchen..."
+      />
+    </div>
+    <div class="filter-item">
+      <label for="department">Org.-Einheit</label>
+      <p-select
+        id="department"
+        styleClass="filter-select-wide"
+        overlayStyleClass="compact-dropdown"
+        [options]="departmentOptions()"
+        [ngModel]="filterDepartment()"
+        (ngModelChange)="filterDepartment.set($event)"
+        placeholder="Alle"
+        [showClear]="true"
+        [filter]="true"
+        filterPlaceholder="Suchen..."
+      />
+    </div>
+    <div class="filter-item">
+      <label for="qualification">Qualifikation</label>
+      <p-select
+        id="qualification"
+        styleClass="filter-select"
+        overlayStyleClass="compact-dropdown"
+        [options]="qualificationOptions()"
+        [ngModel]="filterQualification()"
+        (ngModelChange)="filterQualification.set($event)"
+        placeholder="Alle"
+        [showClear]="true"
+        [filter]="true"
+        filterPlaceholder="Suchen..."
       />
     </div>
     <div class="filter-item checkbox-item">
@@ -30,129 +64,209 @@
         (ngModelChange)="showOnlyUnfilled.set($event)"
         [binary]="true"
       />
-      <label for="unfilled">Show only unfilled positions</label>
+      <label for="unfilled">Nur unbesetzte Stellen</label>
     </div>
     <div class="filter-stats">
-      {{ filteredRows().length }} of {{ ganttRows().length }} positions
+      {{ filteredRows().length }} von {{ ganttRows().length }} Stellen
       @if (totalWhiteSpots() > 0) {
         <span class="white-spot-count">
-          ({{ totalWhiteSpots() }} with gaps)
+          ({{ totalWhiteSpots() }} mit Lücken)
         </span>
       }
     </div>
+    <ng-content select="[header-slot]" />
   </div>
 
-  <!-- Gantt Header -->
-  <div class="gantt-header">
-    <div class="gantt-label-header">
-      <span class="header-grade">Grade</span>
-      <span class="header-desc">Position</span>
-      <span class="header-fill">Fill %</span>
-    </div>
-    <div class="gantt-timeline-header">
-      @for (month of months(); track month.key) {
-        <div class="gantt-month" [style.width.%]="month.widthPercent">
-          {{ month.label }}
-        </div>
-      }
+  <!-- Zoom Controls with Timeline Slider -->
+  <div class="zoom-controls">
+    <span class="zoom-label">Zeitraum:</span>
+    @for (option of zoomOptions; track option.value) {
+      <p-button
+        [label]="option.label"
+        [outlined]="zoomLevel() !== option.value"
+        [severity]="zoomLevel() === option.value ? 'primary' : 'secondary'"
+        size="small"
+        styleClass="zoom-btn"
+        (onClick)="setZoom(option.value)"
+      />
+    }
+    <div class="timeline-slider-container">
+      <span
+        class="slider-date-label start-label"
+        [style.left.%]="(timelineRange()[0] / totalDataDays()) * 100"
+      >
+        {{ sliderStartDate() }}
+      </span>
+      <span
+        class="slider-date-label end-label"
+        [style.left.%]="(timelineRange()[1] / totalDataDays()) * 100"
+      >
+        {{ sliderEndDate() }}
+      </span>
+      <p-slider
+        [ngModel]="timelineRange()"
+        (ngModelChange)="onTimelineRangeChange($event)"
+        [range]="true"
+        [min]="0"
+        [max]="totalDataDays()"
+        [step]="7"
+      />
     </div>
   </div>
 
-  <!-- Today Marker positioned over body -->
+  <!-- Header with Years and Months -->
+  <div class="gantt-header-wrapper">
+    <!-- Year Row -->
+    <div class="gantt-year-row">
+      <div class="gantt-year-spacer"></div>
+      <div class="gantt-year-headers">
+        @for (year of yearHeaders(); track year.year) {
+          <div
+            class="gantt-year"
+            [style.width.%]="year.widthPercent"
+          >
+            {{ year.year }}
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Month Row -->
+    <div class="gantt-header">
+      <div class="gantt-label-header">
+        <span class="header-sap">SAP-Nr</span>
+        <span class="header-qual">Qual.</span>
+        <span class="header-desc">Stelle</span>
+        <span class="header-fill">Besetzt</span>
+      </div>
+      <div class="gantt-timeline-header">
+        @for (month of months(); track month.key) {
+          <div
+            class="gantt-month"
+            [class.year-start]="month.isFirstOfYear"
+            [style.width.%]="month.widthPercent"
+          >
+            {{ month.label }}
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Body with Virtual Scrolling -->
   <div class="gantt-body-wrapper">
     @if (todayMarkerPosition() !== null) {
       <div
         class="today-marker"
-        [style.left]="'calc(250px + ' + todayMarkerPosition() + '%)'"
+        [style.left]="'calc(320px + (100% - 320px) * ' + todayMarkerPosition() + ' / 100)'"
       >
-        <span class="today-label">Today</span>
+        <span class="today-label">Heute</span>
       </div>
     }
 
-    <div class="gantt-body">
-      @for (row of filteredRows(); track row.position.objectId) {
-        <div class="gantt-row" [class.has-gaps]="row.hasGaps">
-          <div class="gantt-label">
-            <span class="grade-badge" [class]="row.gradeClass">
-              {{ row.position.baseGrade || 'N/A' }}
-            </span>
-            <span
-              class="position-desc"
-              [title]="row.position.objectDescription ?? ''"
-            >
-              {{ row.position.objectDescription || row.position.objectCode || 'Unknown' }}
-            </span>
-            <span
-              class="fill-percent"
-              [class.under-filled]="row.totalCurrentFill < 100"
-              [class.over-filled]="row.totalCurrentFill > 100"
-            >
-              {{ row.totalCurrentFill | number: '1.0-0' }}%
-            </span>
-          </div>
-          <div class="gantt-timeline">
-            <!-- 4 Band rows -->
-            <div class="band-container">
-              @for (bandLevel of bandLevels; track bandLevel) {
-                <div class="band-row" [attr.data-band]="bandLevel">
-                  @for (segment of row.bands[bandLevel]; track $index) {
-                    <div
-                      class="band-segment"
-                      [class.filled]="segment.isFilled"
-                      [class.gap]="!segment.isFilled"
-                      [style.left.%]="segment.startPercent"
-                      [style.width.%]="segment.widthPercent"
-                      pTooltip
-                      [tooltipOptions]="{
-                        tooltipLabel: segment.tooltip,
-                        tooltipPosition: 'top',
-                      }"
-                    >
-                      @if (segment.isFilled && bandLevel === 0 && segment.assignments.length > 0) {
-                        <span class="segment-label">
-                          {{ segment.assignments[0].personnelNumber }}
-                        </span>
-                      }
-                    </div>
-                  }
-                </div>
-              }
-            </div>
+    <cdk-virtual-scroll-viewport
+      [itemSize]="rowHeight"
+      class="gantt-viewport"
+    >
+      <div
+        *cdkVirtualFor="let row of filteredRows(); trackBy: trackByObjectId"
+        class="gantt-row"
+        [class.has-gaps]="row.hasGaps"
+      >
+        <div class="gantt-label">
+          <span class="sap-nr" [title]="row.position.objectId">
+            {{ row.position.objectId }}
+          </span>
+          <span class="qual-badge" [class]="row.gradeClass">
+            {{ row.position.tariffGroup || '-' }}
+          </span>
+          <span
+            class="position-desc"
+            [title]="row.position.objectDescription ?? ''"
+          >
+            {{ row.position.objectDescription || row.position.objectCode || 'Unbekannt' }}
+          </span>
+          <span
+            class="fill-percent"
+            [class.under-filled]="row.totalCurrentFill < 100"
+            [class.over-filled]="row.totalCurrentFill > 100"
+          >
+            {{ row.totalCurrentFill | number: '1.0-0' }}%
+          </span>
+        </div>
+        <div class="gantt-timeline">
+          <div class="band-container">
+            @for (bandLevel of bandLevels; track bandLevel) {
+              <div class="band-row" [attr.data-band]="bandLevel">
+                @for (segment of row.bands[bandLevel]; track $index) {
+                  <div
+                    class="band-segment"
+                    [class.filled]="segment.isFilled"
+                    [class.gap]="!segment.isFilled"
+                    [style.left.%]="segment.startPercent"
+                    [style.width.%]="segment.widthPercent"
+                    pTooltip
+                    [tooltipOptions]="{
+                      tooltipLabel: segment.tooltip,
+                      tooltipPosition: 'top',
+                    }"
+                  >
+                    @if (segment.isFilled && bandLevel === 0 && segment.assignments.length > 0) {
+                      <span class="segment-label">
+                        {{ segment.assignments[0].personnelNumber }}
+                      </span>
+                    }
+                  </div>
+                }
+              </div>
+            }
           </div>
         </div>
-      }
+      </div>
+    </cdk-virtual-scroll-viewport>
 
-      @if (filteredRows().length === 0) {
-        <div class="no-data">
-          @if (positions().length === 0) {
-            No positions to display. Upload a CSV file to get started.
-          } @else {
-            No positions match your filter criteria.
-          }
-        </div>
-      }
-    </div>
+    @if (filteredRows().length === 0) {
+      <div class="no-data">
+        @if (positions().length === 0) {
+          Keine Stellen vorhanden. Laden Sie eine CSV-Datei hoch.
+        } @else {
+          Keine Stellen entsprechen Ihren Filterkriterien.
+        }
+      </div>
+    }
   </div>
 
   <!-- Legend -->
   <div class="gantt-legend">
-    <div class="legend-section">
-      <span class="legend-title">Fill Level:</span>
-      <span class="legend-item">
-        <span class="legend-color filled"></span> Filled
-      </span>
-      <span class="legend-item">
-        <span class="legend-color gap"></span> White Spot (Gap)
-      </span>
+    <div class="legend-left">
+      <div class="legend-section">
+        <span class="legend-title">Besetzung:</span>
+        <span class="legend-item">
+          <span class="legend-color filled"></span> Besetzt
+        </span>
+        <span class="legend-item">
+          <span class="legend-color gap"></span> Lücke (White Spot)
+        </span>
+      </div>
+      <div class="legend-section">
+        <span class="legend-title">Bänder:</span>
+        <span class="legend-item">25% (oben) → 100% (unten)</span>
+      </div>
+      <div class="legend-section">
+        <span class="legend-item">
+          <span class="today-line"></span> Heute
+        </span>
+      </div>
     </div>
-    <div class="legend-section">
-      <span class="legend-title">Bands:</span>
-      <span class="legend-item">100% (top) → 25% (bottom)</span>
-    </div>
-    <div class="legend-section">
-      <span class="legend-item">
-        <span class="today-line"></span> Today
-      </span>
+    <div class="legend-right">
+      <p-button
+        label="Daten löschen"
+        icon="pi pi-trash"
+        severity="danger"
+        [outlined]="true"
+        size="small"
+        (onClick)="onClearData()"
+      />
     </div>
   </div>
 </div>

@@ -1,0 +1,88 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+StaffPlan is a Strategic Staff and Budget Planning web application built with Spring Boot 4.0 (Java 25), Angular 21, PostgreSQL, and Keycloak for authentication.
+
+## Build & Development Commands
+
+### Server application (from project root)
+```bash
+./gradlew bootRun              # Run development server (port 8080)
+./gradlew test                 # Run tests
+./gradlew spotlessCheck        # Check Java code format
+./gradlew spotlessApply        # Apply Java code formatter
+./gradlew checkstyleMain       # Check JavaDoc/style
+./gradlew bootJar              # Build production JAR
+```
+
+### Client web application (from src/main/webapp)
+```bash
+npm start                      # Run dev server (port 4200)
+npm test                       # Run Vitest tests
+npm run lint                   # Run ESLint
+npm run prettier:check         # Check code format
+npm run prettier:fix           # Apply Prettier formatting
+npm run compile:ts             # TypeScript type checking
+```
+
+### Docker (from docker/)
+```bash
+docker compose up -d postgres keycloak    # Start database and auth for local dev
+docker compose up -d                       # Start all services
+```
+
+## Architecture
+
+### Server Structure (`src/main/java/de/tum/cit/aet/`)
+- **core/config/**: Database, CORS, security configuration
+- **core/security/**: JWT authentication, Keycloak integration, authorization
+- **staffplan/**: Position management feature (domain, dto, repository, service, web)
+- **usermanagement/**: User and research group management
+- **util/**: Shared utilities and pagination helpers
+
+Follows standard layered architecture: Web (REST controllers) → Service → Repository → Domain (JPA entities).
+
+### Client Structure (`src/main/webapp/src/app/`)
+- **core/security/**: KeycloakService, SecurityStore (signals-based auth state), guards, interceptors
+- **features/**: Feature modules (landing, positions, admin)
+- **app.routes.ts**: Lazy-loaded routes with auth guards
+
+### Key Patterns
+- **DTOs**: Java records with `fromEntity()` factory methods
+- **State Management**: Angular Signals (no NgRx) via `SecurityStore`
+- **Change Detection**: OnPush everywhere with `signal()`, `computed()`, `input()`, `output()`
+- **Security**: OAuth2 Resource Server with JWT validation from Keycloak; roles extracted from `resource_access` claim
+- **Database**: Liquibase migrations in `src/main/resources/db/changelog/`
+
+## Angular Conventions
+
+- Standalone components only (no NgModules) - do NOT set `standalone: true` (it's the default in Angular 21+)
+- Use new control flow: `@if`, `@for`, `@switch` (not `*ngIf`, `*ngFor`)
+- Use `input()` and `output()` functions instead of decorators
+- Use `computed()` for derived state
+- Always set `changeDetection: ChangeDetectionStrategy.OnPush`
+- Use `host` object in decorator instead of `@HostBinding`/`@HostListener`
+- Prefer Reactive forms over Template-driven forms
+- Use `class` bindings instead of `ngClass`
+
+## Test Users (Keycloak)
+
+| Username   | Password   | Role        |
+|------------|------------|-------------|
+| admin      | admin      | admin       |
+| jobmanager | jobmanager | job_manager |
+| professor  | professor  | professor   |
+| employee   | employee   | employee    |
+
+## Configuration
+
+- **Server**: `src/main/resources/config/application.yml` (base), `application-local.yml` (dev overrides)
+- **Client**: `src/main/webapp/src/environments/environment.ts`
+- **Keycloak realm**: `docker/keycloak/staffplan-realm.json`
+
+## API Documentation
+
+When the server is running: http://localhost:8080/swagger-ui.html

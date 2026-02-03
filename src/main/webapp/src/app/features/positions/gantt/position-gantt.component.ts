@@ -1,10 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, output, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 import { Tooltip } from 'primeng/tooltip';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { Checkbox } from 'primeng/checkbox';
+import { Button } from 'primeng/button';
+import { Slider } from 'primeng/slider';
 import {
   Position,
   EmployeeAssignment,
@@ -26,18 +29,28 @@ interface GanttBandRow {
   totalCurrentFill: number;
   hasGaps: boolean;
   gradeClass: string;
-  bands: BandSegment[][]; // Pre-computed: bands[bandLevel][segmentIndex]
+  bands: BandSegment[][];
 }
 
 interface MonthHeader {
   key: string;
   label: string;
   widthPercent: number;
+  isFirstOfYear: boolean;
+  year: number;
 }
+
+interface YearHeader {
+  year: number;
+  widthPercent: number;
+  startPercent: number;
+}
+
+type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
 
 @Component({
   selector: 'app-position-gantt',
-  imports: [DecimalPipe, Tooltip, FormsModule, InputText, Select, Checkbox],
+  imports: [DecimalPipe, Tooltip, FormsModule, ScrollingModule, InputText, Select, Checkbox, Button, Slider],
   templateUrl: './position-gantt.component.html',
   styles: `
     .gantt-container {
@@ -50,47 +63,96 @@ interface MonthHeader {
     /* Filter Bar */
     .filter-bar {
       display: flex;
-      gap: 1rem;
-      padding: 0.75rem 1rem;
+      gap: 0.5rem;
+      padding: 0.25rem 0.5rem;
       background: var(--p-surface-50);
       border-bottom: 1px solid var(--p-surface-300);
       flex-wrap: wrap;
       align-items: flex-end;
+      font-size: 0.7rem;
     }
 
     .filter-item {
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: 0.125rem;
 
       label {
-        font-size: 0.75rem;
+        font-size: 0.6rem;
         color: var(--p-text-muted-color);
         font-weight: 500;
       }
 
       input {
-        width: 200px;
+        width: 240px;
+        font-size: 0.65rem;
+        padding: 0.15rem 0.3rem;
+        height: 1.5rem;
       }
     }
+
+    :host ::ng-deep .filter-bar {
+      .p-select {
+        font-size: 0.65rem;
+        height: 1.5rem;
+        min-height: 1.5rem;
+
+        .p-select-label {
+          font-size: 0.65rem;
+          padding: 0.15rem 0.3rem;
+        }
+
+        .p-select-dropdown {
+          width: 1.2rem;
+        }
+      }
+
+      .filter-select {
+        width: 5.5rem;
+      }
+
+      .filter-select-wide {
+        width: 7rem;
+      }
+
+      .p-checkbox {
+        width: 0.9rem;
+        height: 0.9rem;
+      }
+    }
+
 
     .checkbox-item {
       flex-direction: row;
       align-items: center;
-      gap: 0.5rem;
-      padding-bottom: 0.25rem;
+      gap: 0.25rem;
+      margin-bottom: 0;
+      padding-bottom: 0;
+      height: 1.5rem;
 
       label {
-        font-size: 0.875rem;
+        font-size: 0.6rem;
         color: var(--p-text-color);
+        line-height: 1;
+        white-space: nowrap;
+      }
+    }
+
+    :host ::ng-deep .checkbox-item .p-checkbox {
+      width: 0.85rem;
+      height: 0.85rem;
+
+      .p-checkbox-box {
+        width: 0.85rem;
+        height: 0.85rem;
       }
     }
 
     .filter-stats {
       margin-left: auto;
-      font-size: 0.875rem;
+      font-size: 0.7rem;
       color: var(--p-text-muted-color);
-      padding-bottom: 0.25rem;
+      padding-bottom: 0.125rem;
     }
 
     .white-spot-count {
@@ -98,18 +160,119 @@ interface MonthHeader {
       font-weight: 500;
     }
 
-    /* Header */
-    .gantt-header {
+    /* Zoom Controls */
+    .zoom-controls {
       display: flex;
+      gap: 0.35rem;
+      padding: 0.15rem 0.5rem;
+      background: var(--p-surface-50);
+      border-bottom: 1px solid var(--p-surface-300);
+      align-items: center;
+    }
+
+    .zoom-label {
+      font-size: 0.65rem;
+      color: var(--p-text-muted-color);
+      font-weight: 500;
+      margin-right: 0.25rem;
+    }
+
+    .zoom-btn {
+      font-size: 0.65rem !important;
+      padding: 0.15rem 0.4rem !important;
+    }
+
+    .zoom-btn.active {
+      background: var(--p-primary-color) !important;
+      color: white !important;
+    }
+
+    .timeline-slider-container {
+      flex: 1;
+      position: relative;
+      margin-left: 0.75rem;
+      padding: 0 2.5rem;
+      min-width: 200px;
+    }
+
+    .slider-date-label {
+      position: absolute;
+      top: -0.75rem;
+      font-size: 0.5rem;
+      background: var(--p-primary-color);
+      color: white;
+      padding: 0.05rem 0.2rem;
+      border-radius: 2px;
+      white-space: nowrap;
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+
+    :host ::ng-deep .timeline-slider-container {
+      .p-slider {
+        height: 3px;
+        background: var(--p-surface-300);
+
+        .p-slider-range {
+          background: var(--p-primary-color);
+        }
+
+        .p-slider-handle {
+          width: 10px;
+          height: 10px;
+          margin-top: -3.5px;
+          background: white;
+          border: 2px solid var(--p-primary-color);
+        }
+      }
+    }
+
+    /* Header */
+    .gantt-header-wrapper {
+      display: flex;
+      flex-direction: column;
       background: var(--p-surface-100);
       border-bottom: 1px solid var(--p-surface-300);
+    }
+
+    .gantt-year-row {
+      display: flex;
+      border-bottom: 1px solid var(--p-surface-200);
+    }
+
+    .gantt-year-spacer {
+      width: 320px;
+      min-width: 320px;
+      border-right: 1px solid var(--p-surface-300);
+    }
+
+    .gantt-year-headers {
+      flex: 1;
+      display: flex;
+      position: relative;
+      box-sizing: border-box;
+    }
+
+    .gantt-year {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.75rem;
+      color: var(--p-primary-color);
+      background: rgba(59, 130, 246, 0.05);
+      box-sizing: border-box;
+    }
+
+    .gantt-header {
+      display: flex;
       font-weight: 600;
       font-size: 0.8rem;
     }
 
     .gantt-label-header {
-      width: 250px;
-      min-width: 250px;
+      width: 320px;
+      min-width: 320px;
       padding: 0.5rem 0.75rem;
       border-right: 1px solid var(--p-surface-300);
       display: flex;
@@ -117,8 +280,14 @@ interface MonthHeader {
       align-items: center;
     }
 
-    .header-grade {
-      width: 50px;
+    .header-sap {
+      width: 70px;
+      font-size: 0.7rem;
+    }
+
+    .header-qual {
+      width: 35px;
+      font-size: 0.7rem;
     }
 
     .header-desc {
@@ -133,13 +302,19 @@ interface MonthHeader {
     .gantt-timeline-header {
       flex: 1;
       display: flex;
+      box-sizing: border-box;
     }
 
     .gantt-month {
-      padding: 0.5rem 0.25rem;
+      padding: 0.25rem 0.125rem;
       text-align: center;
       border-right: 1px solid var(--p-surface-200);
-      font-size: 0.75rem;
+      font-size: 0.6rem;
+      box-sizing: border-box;
+
+      &.year-start {
+        border-left: 2px solid var(--p-primary-color);
+      }
     }
 
     /* Body */
@@ -147,9 +322,8 @@ interface MonthHeader {
       position: relative;
     }
 
-    .gantt-body {
-      max-height: 600px;
-      overflow-y: auto;
+    .gantt-viewport {
+      height: calc(100vh - 240px);
     }
 
     /* Today Marker */
@@ -194,6 +368,7 @@ interface MonthHeader {
     .gantt-row {
       display: flex;
       border-bottom: 1px solid var(--p-surface-200);
+      height: 52px;
 
       &:hover {
         background: var(--p-surface-50);
@@ -205,8 +380,8 @@ interface MonthHeader {
     }
 
     .gantt-label {
-      width: 250px;
-      min-width: 250px;
+      width: 320px;
+      min-width: 320px;
       padding: 0.5rem 0.75rem;
       border-right: 1px solid var(--p-surface-300);
       display: flex;
@@ -215,12 +390,21 @@ interface MonthHeader {
       font-size: 0.8rem;
     }
 
-    .grade-badge {
+    .sap-nr {
+      width: 70px;
+      font-size: 0.7rem;
+      color: var(--p-text-muted-color);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .qual-badge {
       padding: 0.125rem 0.375rem;
       border-radius: 4px;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       font-weight: 600;
-      min-width: 40px;
+      min-width: 35px;
       text-align: center;
 
       &.grade-w {
@@ -269,7 +453,7 @@ interface MonthHeader {
     .gantt-timeline {
       flex: 1;
       position: relative;
-      min-height: 48px;
+      height: 100%;
     }
 
     .band-container {
@@ -356,18 +540,29 @@ interface MonthHeader {
     /* Legend */
     .gantt-legend {
       display: flex;
-      gap: 2rem;
-      padding: 0.75rem 1rem;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
       background: var(--p-surface-50);
       border-top: 1px solid var(--p-surface-300);
-      font-size: 0.8rem;
+      font-size: 0.7rem;
+    }
+
+    .legend-left {
+      display: flex;
+      gap: 1.5rem;
       flex-wrap: wrap;
+    }
+
+    .legend-right {
+      display: flex;
+      align-items: center;
     }
 
     .legend-section {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
     .legend-title {
@@ -406,17 +601,86 @@ interface MonthHeader {
 })
 export class PositionGanttComponent {
   readonly positions = input<Position[]>([]);
+  readonly clearData = output<void>();
 
   // Constants
   readonly bandLevels = [3, 2, 1, 0] as const;
+  readonly zoomOptions: { label: string; value: ZoomLevel }[] = [
+    { label: '3M', value: 3 },
+    { label: '6M', value: 6 },
+    { label: '1J', value: 12 },
+    { label: '2J', value: 24 },
+    { label: '3J', value: 36 },
+    { label: '5J', value: 60 },
+  ];
+  readonly rowHeight = 52;
 
   // Filter signals
   readonly searchTerm = signal('');
-  readonly filterGrade = signal<string | null>(null);
+  readonly filterRelevanceType = signal<string | null>(null);
+  readonly filterDepartment = signal<string | null>(null);
+  readonly filterQualification = signal<string | null>(null);
   readonly showOnlyUnfilled = signal(false);
 
-  // Current date signal (can be injected for testing)
+  // Zoom signal (months to display)
+  readonly zoomLevel = signal<ZoomLevel>(12);
+
+  // Current date signal
   private readonly today = signal(new Date());
+
+  // Timeline range slider signals (as day offsets from dataRangeMin)
+  readonly timelineRange = signal<[number, number]>([0, 100]);
+
+  // Computed: overall data range - fixed to 3 years past and 3 years future
+  readonly dataRange = computed(() => {
+    const now = this.today();
+
+    // Fixed range: 3 years before to 3 years after today
+    const minDate = new Date(now.getFullYear() - 3, 0, 1);
+    const maxDate = new Date(now.getFullYear() + 3, 11, 31);
+
+    return { min: minDate, max: maxDate };
+  });
+
+  // Computed: total days in data range (for slider)
+  readonly totalDataDays = computed(() => {
+    const range = this.dataRange();
+    return this.daysBetween(range.min, range.max);
+  });
+
+  // Computed: formatted dates for slider labels
+  readonly sliderStartDate = computed(() => {
+    const range = this.dataRange();
+    const days = this.timelineRange()[0];
+    const date = new Date(range.min.getTime() + days * 24 * 60 * 60 * 1000);
+    return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  });
+
+  readonly sliderEndDate = computed(() => {
+    const range = this.dataRange();
+    const days = this.timelineRange()[1];
+    const date = new Date(range.min.getTime() + days * 24 * 60 * 60 * 1000);
+    return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  });
+
+  constructor() {
+    // Initialize slider to show 1 year centered on today when data loads
+    effect(() => {
+      const range = this.dataRange();
+      const totalDays = this.totalDataDays();
+      const now = this.today();
+
+      // Calculate today's position as days from min
+      const todayOffset = Math.max(0, this.daysBetween(range.min, now) - 1);
+
+      // Default: 6 months before and after today
+      const halfYear = 182;
+      const start = Math.max(0, todayOffset - halfYear);
+      const end = Math.min(totalDays, todayOffset + halfYear);
+
+      this.timelineRange.set([start, end]);
+    }, { allowSignalWrites: true });
+  }
 
   // Computed: grouped positions
   private readonly groupedPositions = computed((): GroupedPosition[] => {
@@ -433,15 +697,16 @@ export class PositionGanttComponent {
           objectId,
           objectCode: p.objectCode,
           objectDescription: p.objectDescription,
-          baseGrade: p.baseGrade,
+          tariffGroup: p.tariffGroup,
           positionValue: p.positionValue || 1,
+          positionRelevanceType: p.positionRelevanceType,
+          organizationUnit: p.organizationUnit,
           assignments: [],
           dateRange: { start: new Date(), end: new Date() },
         };
         groups.set(objectId, group);
       }
 
-      // Add assignment if there's a personnel number or percentage
       if (p.personnelNumber || p.percentage) {
         const startDate = p.startDate ? new Date(p.startDate) : new Date();
         const endDate = p.endDate ? new Date(p.endDate) : new Date(2099, 11, 31);
@@ -456,7 +721,6 @@ export class PositionGanttComponent {
       }
     }
 
-    // Calculate date ranges for each group
     for (const group of groups.values()) {
       if (group.assignments.length > 0) {
         const starts = group.assignments.map((a) => a.startDate.getTime());
@@ -469,56 +733,32 @@ export class PositionGanttComponent {
     return Array.from(groups.values());
   });
 
-  // Computed: overall date range
-  private readonly dateRange = computed(() => {
-    const groups = this.groupedPositions();
-    const now = this.today();
+  // Computed: visible date range based on slider
+  readonly visibleDateRange = computed(() => {
+    const dataRange = this.dataRange();
+    const [startDays, endDays] = this.timelineRange();
 
-    if (groups.length === 0) {
-      return {
-        start: new Date(now.getFullYear(), 0, 1),
-        end: new Date(now.getFullYear(), 11, 31),
-      };
-    }
+    const start = new Date(dataRange.min.getTime() + startDays * 24 * 60 * 60 * 1000);
+    const end = new Date(dataRange.min.getTime() + endDays * 24 * 60 * 60 * 1000);
 
-    let minDate: Date | null = null;
-    let maxDate: Date | null = null;
+    // Round to first of month for start, last of month for end
+    const startRounded = new Date(start.getFullYear(), start.getMonth(), 1);
+    const endRounded = new Date(end.getFullYear(), end.getMonth() + 1, 0);
 
-    for (const group of groups) {
-      for (const assignment of group.assignments) {
-        if (minDate === null || assignment.startDate < minDate) {
-          minDate = assignment.startDate;
-        }
-        if (assignment.endDate.getFullYear() < 2099) {
-          if (maxDate === null || assignment.endDate > maxDate) {
-            maxDate = assignment.endDate;
-          }
-        }
-      }
-    }
+    return { start: startRounded, end: endRounded };
+  });
 
-    // Default to current year if no valid dates
-    if (minDate === null) minDate = new Date(now.getFullYear(), 0, 1);
-    if (maxDate === null) maxDate = new Date(now.getFullYear(), 11, 31);
-
-    // Extend range to full months
-    minDate = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
-    maxDate = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
-
-    // Ensure at least 12 months shown
-    const monthsDiff =
-      (maxDate.getFullYear() - minDate.getFullYear()) * 12 +
-      (maxDate.getMonth() - minDate.getMonth());
-    if (monthsDiff < 12) {
-      maxDate = new Date(minDate.getFullYear(), minDate.getMonth() + 12, 0);
-    }
-
-    return { start: minDate, end: maxDate };
+  // Computed: formatted date range string
+  readonly dateRangeDisplay = computed(() => {
+    const range = this.visibleDateRange();
+    const startStr = range.start.toLocaleDateString('de-DE', { month: 'short', year: 'numeric' });
+    const endStr = range.end.toLocaleDateString('de-DE', { month: 'short', year: 'numeric' });
+    return `${startStr} - ${endStr}`;
   });
 
   // Computed: today marker position
   readonly todayMarkerPosition = computed((): number | null => {
-    const range = this.dateRange();
+    const range = this.visibleDateRange();
     const now = this.today();
 
     if (now < range.start || now > range.end) {
@@ -531,61 +771,119 @@ export class PositionGanttComponent {
     return (daysFromStart / totalDays) * 100;
   });
 
+  // Computed: year headers (calculated from months to ensure alignment)
+  readonly yearHeaders = computed((): YearHeader[] => {
+    const monthHeaders = this.months();
+    const years: YearHeader[] = [];
+    const yearMap = new Map<number, { startPercent: number; widthPercent: number }>();
+
+    let cumulativePercent = 0;
+    for (const month of monthHeaders) {
+      if (!yearMap.has(month.year)) {
+        yearMap.set(month.year, { startPercent: cumulativePercent, widthPercent: 0 });
+      }
+      yearMap.get(month.year)!.widthPercent += month.widthPercent;
+      cumulativePercent += month.widthPercent;
+    }
+
+    for (const [year, data] of yearMap) {
+      years.push({
+        year,
+        startPercent: data.startPercent,
+        widthPercent: data.widthPercent,
+      });
+    }
+
+    return years;
+  });
+
   // Computed: month headers
   readonly months = computed((): MonthHeader[] => {
-    const range = this.dateRange();
+    const range = this.visibleDateRange();
     const result: MonthHeader[] = [];
-
     const totalDays = this.daysBetween(range.start, range.end);
     let current = new Date(range.start);
+    let lastYear = -1;
 
     while (current <= range.end) {
       const monthEnd = new Date(current.getFullYear(), current.getMonth() + 1, 0);
       const endOfPeriod = monthEnd < range.end ? monthEnd : range.end;
       const daysInMonth = this.daysBetween(current, endOfPeriod);
+      const isFirstOfYear = current.getMonth() === 0 && lastYear !== current.getFullYear();
 
       result.push({
         key: `${current.getFullYear()}-${current.getMonth()}`,
-        label: current.toLocaleDateString('en-US', {
-          month: 'short',
-          year: '2-digit',
-        }),
+        label: current.toLocaleDateString('de-DE', { month: 'short' }),
         widthPercent: (daysInMonth / totalDays) * 100,
+        isFirstOfYear,
+        year: current.getFullYear(),
       });
 
+      lastYear = current.getFullYear();
       current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
     }
 
     return result;
   });
 
-  // Computed: grade options for filter
-  readonly gradeOptions = computed(() => {
+  // Computed: relevance type options
+  readonly relevanceTypeOptions = computed(() => {
     const groups = this.groupedPositions();
-    const grades = new Set<string>();
+    const types = new Set<string>();
 
     for (const group of groups) {
-      if (group.baseGrade) {
-        grades.add(group.baseGrade);
+      if (group.positionRelevanceType) {
+        types.add(group.positionRelevanceType);
       }
     }
 
-    return Array.from(grades)
+    return Array.from(types)
       .sort()
-      .map((g) => ({ label: g, value: g }));
+      .map((t) => ({ label: t, value: t }));
+  });
+
+  // Computed: department options
+  readonly departmentOptions = computed(() => {
+    const groups = this.groupedPositions();
+    const departments = new Set<string>();
+
+    for (const group of groups) {
+      if (group.organizationUnit) {
+        departments.add(group.organizationUnit);
+      }
+    }
+
+    return Array.from(departments)
+      .sort()
+      .map((d) => ({ label: d, value: d }));
+  });
+
+  // Computed: qualification options
+  readonly qualificationOptions = computed(() => {
+    const groups = this.groupedPositions();
+    const qualifications = new Set<string>();
+
+    for (const group of groups) {
+      if (group.tariffGroup) {
+        qualifications.add(group.tariffGroup);
+      }
+    }
+
+    return Array.from(qualifications)
+      .sort()
+      .map((q) => ({ label: q, value: q }));
   });
 
   // Computed: Gantt rows with pre-computed bands
   readonly ganttRows = computed((): GanttBandRow[] => {
     const groups = this.groupedPositions();
-    const range = this.dateRange();
+    const range = this.visibleDateRange();
     const totalDays = this.daysBetween(range.start, range.end);
     const now = this.today();
 
     return groups.map((group) => {
       const slices = this.calculateTimeSlices(group, range);
 
-      // Pre-compute segments with percentages
       const segments = slices.map((slice) => ({
         startPercent: (this.daysBetween(range.start, slice.start) / totalDays) * 100,
         widthPercent: (this.daysBetween(slice.start, slice.end) / totalDays) * 100,
@@ -594,7 +892,6 @@ export class PositionGanttComponent {
         isGap: slice.totalFillPercentage < 100,
       }));
 
-      // Pre-compute all bands
       const bands: BandSegment[][] = this.bandLevels.map((bandLevel) => {
         const bandMin = bandLevel * 25;
         return segments.map((segment) => ({
@@ -607,17 +904,15 @@ export class PositionGanttComponent {
         }));
       });
 
-      // Calculate current fill (at today or latest assignment)
       const currentSlice = slices.find((s) => now >= s.start && now <= s.end);
       const totalCurrentFill = currentSlice?.totalFillPercentage || 0;
-
       const hasGaps = segments.some((s) => s.isGap && s.widthPercent > 0.5);
 
       return {
         position: group,
         totalCurrentFill,
         hasGaps,
-        gradeClass: this.getGradeClass(group.baseGrade),
+        gradeClass: this.getGradeClass(group.tariffGroup),
         bands,
       };
     });
@@ -627,7 +922,9 @@ export class PositionGanttComponent {
   readonly filteredRows = computed((): GanttBandRow[] => {
     let rows = this.ganttRows();
     const search = this.searchTerm().toLowerCase();
-    const grade = this.filterGrade();
+    const relevanceType = this.filterRelevanceType();
+    const department = this.filterDepartment();
+    const qualification = this.filterQualification();
     const unfilledOnly = this.showOnlyUnfilled();
 
     if (search) {
@@ -635,15 +932,24 @@ export class PositionGanttComponent {
         (r) =>
           r.position.objectDescription?.toLowerCase().includes(search) ||
           r.position.objectCode?.toLowerCase().includes(search) ||
-          r.position.baseGrade?.toLowerCase().includes(search) ||
+          r.position.tariffGroup?.toLowerCase().includes(search) ||
+          r.position.organizationUnit?.toLowerCase().includes(search) ||
           r.position.assignments.some((a) =>
             a.personnelNumber.toLowerCase().includes(search)
           )
       );
     }
 
-    if (grade) {
-      rows = rows.filter((r) => r.position.baseGrade === grade);
+    if (relevanceType) {
+      rows = rows.filter((r) => r.position.positionRelevanceType === relevanceType);
+    }
+
+    if (department) {
+      rows = rows.filter((r) => r.position.organizationUnit === department);
+    }
+
+    if (qualification) {
+      rows = rows.filter((r) => r.position.tariffGroup === qualification);
     }
 
     if (unfilledOnly) {
@@ -657,6 +963,42 @@ export class PositionGanttComponent {
   readonly totalWhiteSpots = computed(() => {
     return this.ganttRows().filter((r) => r.hasGaps || r.totalCurrentFill < 100).length;
   });
+
+  // Set zoom level
+  setZoom(level: ZoomLevel): void {
+    this.zoomLevel.set(level);
+
+    // Update slider to show the specified number of months centered on today
+    const dataRange = this.dataRange();
+    const totalDays = this.totalDataDays();
+    const now = this.today();
+
+    const todayOffset = Math.max(0, this.daysBetween(dataRange.min, now) - 1);
+    const daysToShow = level * 30; // Approximate days per month
+    const halfDays = Math.floor(daysToShow / 2);
+
+    const start = Math.max(0, todayOffset - halfDays);
+    const end = Math.min(totalDays, todayOffset + halfDays);
+
+    this.timelineRange.set([start, end]);
+  }
+
+  // Handle slider change
+  onTimelineRangeChange(value: number | number[]): void {
+    if (Array.isArray(value) && value.length === 2) {
+      this.timelineRange.set([value[0], value[1]]);
+    }
+  }
+
+  // Handle clear data
+  onClearData(): void {
+    this.clearData.emit();
+  }
+
+  // TrackBy function for virtual scrolling
+  trackByObjectId(_index: number, row: GanttBandRow): string {
+    return row.position.objectId;
+  }
 
   // Calculate time slices for a position
   private calculateTimeSlices(
@@ -676,7 +1018,6 @@ export class PositionGanttComponent {
       ];
     }
 
-    // Collect all boundary dates
     const boundaries = new Set<number>();
     boundaries.add(range.start.getTime());
     boundaries.add(range.end.getTime());
@@ -684,8 +1025,10 @@ export class PositionGanttComponent {
     for (const a of assignments) {
       const start = Math.max(a.startDate.getTime(), range.start.getTime());
       const end = Math.min(a.endDate.getTime(), range.end.getTime());
-      boundaries.add(start);
-      boundaries.add(end);
+      if (start <= range.end.getTime() && end >= range.start.getTime()) {
+        boundaries.add(start);
+        boundaries.add(end);
+      }
     }
 
     const sortedBoundaries = Array.from(boundaries).sort((a, b) => a - b);
@@ -695,7 +1038,6 @@ export class PositionGanttComponent {
       const sliceStart = new Date(sortedBoundaries[i]);
       const sliceEnd = new Date(sortedBoundaries[i + 1]);
 
-      // Find all assignments active during this slice
       const activeAssignments = assignments.filter(
         (a) => a.startDate <= sliceEnd && a.endDate >= sliceStart
       );
@@ -713,43 +1055,41 @@ export class PositionGanttComponent {
     return slices;
   }
 
-  // Build tooltip string for a segment
   private buildSegmentTooltip(
     group: GroupedPosition,
     segment: { assignments: EmployeeAssignment[]; fillPercentage: number }
   ): string {
     const lines: string[] = [
-      group.objectDescription || group.objectCode || 'Unknown Position',
-      `Grade: ${group.baseGrade || 'N/A'}`,
+      group.objectDescription || group.objectCode || 'Unbekannte Stelle',
+      `Besoldungsgruppe: ${group.tariffGroup || 'N/A'}`,
       '',
     ];
 
     if (segment.assignments.length === 0) {
-      lines.push('No assignments (White Spot)');
+      lines.push('Keine Zuweisungen (Lücke)');
     } else {
-      lines.push('Assignments:');
+      lines.push('Zuweisungen:');
       for (const a of segment.assignments) {
-        const start = a.startDate.toLocaleDateString();
+        const start = a.startDate.toLocaleDateString('de-DE');
         const end =
           a.endDate.getFullYear() >= 2099
-            ? 'ongoing'
-            : a.endDate.toLocaleDateString();
+            ? 'unbefristet'
+            : a.endDate.toLocaleDateString('de-DE');
         lines.push(`  ${a.personnelNumber}: ${a.percentage}% (${start} - ${end})`);
       }
 
       const total = segment.assignments.reduce((s, a) => s + a.percentage, 0);
       lines.push('');
-      lines.push(`Total Fill: ${total.toFixed(1)}%`);
+      lines.push(`Gesamt: ${total.toFixed(1)}%`);
 
       if (total < 100) {
-        lines.push(`Gap: ${(100 - total).toFixed(1)}% unfilled`);
+        lines.push(`Lücke: ${(100 - total).toFixed(1)}% unbesetzt`);
       }
     }
 
     return lines.join('\n');
   }
 
-  // Get CSS class for grade badge
   private getGradeClass(grade: string | null): string {
     if (!grade) return 'grade-other';
     const first = grade.charAt(0).toUpperCase();

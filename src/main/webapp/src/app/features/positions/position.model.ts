@@ -40,8 +40,10 @@ export interface GroupedPosition {
   objectId: string;
   objectCode: string | null;
   objectDescription: string | null;
-  baseGrade: string | null;
+  tariffGroup: string | null;
   positionValue: number;
+  positionRelevanceType: string | null;
+  organizationUnit: string | null;
   assignments: EmployeeAssignment[];
   dateRange: { start: Date; end: Date };
 }

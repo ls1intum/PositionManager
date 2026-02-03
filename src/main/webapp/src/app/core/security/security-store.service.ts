@@ -42,7 +42,7 @@ export class SecurityStore {
     const isLoggedIn = await this.keycloakService.init();
 
     if (isLoggedIn) {
-      await this.fetchUserFromBackend();
+      await this.fetchUser();
     }
     this.isLoading.set(false);
   }
@@ -64,12 +64,12 @@ export class SecurityStore {
     return this.keycloakService.bearer;
   }
 
-  private async fetchUserFromBackend(): Promise<void> {
+  private async fetchUser(): Promise<void> {
     try {
       const user = await firstValueFrom(this.http.get<User>(`${environment.apiUrl}/v2/users/me`));
       this.user.set(user);
     } catch (error) {
-      console.error('Failed to fetch user from backend:', error);
+      console.error('Failed to fetch user from server:', error);
       this.user.set(undefined);
     }
   }

@@ -19,7 +19,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     List<User> findAllByUniversityIdIn(List<String> universityIds);
 
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.researchGroup WHERE u.universityId = :universityId")
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.researchGroup LEFT JOIN FETCH u.groups WHERE u.universityId = :universityId")
     Optional<User> findByUniversityIdWithResearchGroup(@Param("universityId") String universityId);
 
     @Query("""

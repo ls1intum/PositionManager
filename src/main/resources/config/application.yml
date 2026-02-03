@@ -16,7 +16,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   liquibase:
     enabled: true
@@ -31,9 +30,23 @@ spring:
         jwt:
           issuer-uri: http://localhost:8081/realms/staffplan
 
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
 logging:
   level:
     org.springframework: INFO
+    org.hibernate.orm.connections.pooling: WARN
+    org.hibernate.orm.core: WARN
+    org.springframework.data.jpa.repository.query.QueryEnhancerFactories: WARN
+    org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver: WARN
+    org.springframework.boot.web.embedded.tomcat.TomcatWebServer: WARN
+    org.springframework.orm.jpa.persistenceunit.SpringPersistenceUnitInfo: WARN
+    org.springframework.web.servlet.DispatcherServlet: WARN
+    org.apache.catalina.core.ContainerBase: WARN
 
 management:
   endpoints:
