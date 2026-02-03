@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, effect, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ScrollingModule } from '@angular/cdk/scrolling';
@@ -8,12 +16,7 @@ import { Select } from 'primeng/select';
 import { Checkbox } from 'primeng/checkbox';
 import { Button } from 'primeng/button';
 import { Slider } from 'primeng/slider';
-import {
-  Position,
-  EmployeeAssignment,
-  GroupedPosition,
-  TimeSlice,
-} from '../position.model';
+import { Position, EmployeeAssignment, GroupedPosition, TimeSlice } from '../position.model';
 
 interface BandSegment {
   startPercent: number;
@@ -50,7 +53,17 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
 
 @Component({
   selector: 'app-position-gantt',
-  imports: [DecimalPipe, Tooltip, FormsModule, ScrollingModule, InputText, Select, Checkbox, Button, Slider],
+  imports: [
+    DecimalPipe,
+    Tooltip,
+    FormsModule,
+    ScrollingModule,
+    InputText,
+    Select,
+    Checkbox,
+    Button,
+    Slider,
+  ],
   templateUrl: './position-gantt.component.html',
   styles: `
     .gantt-container {
@@ -120,7 +133,6 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
         height: 0.9rem;
       }
     }
-
 
     .checkbox-item {
       flex-direction: row;
@@ -665,21 +677,24 @@ export class PositionGanttComponent {
 
   constructor() {
     // Initialize slider to show 1 year centered on today when data loads
-    effect(() => {
-      const range = this.dataRange();
-      const totalDays = this.totalDataDays();
-      const now = this.today();
+    effect(
+      () => {
+        const range = this.dataRange();
+        const totalDays = this.totalDataDays();
+        const now = this.today();
 
-      // Calculate today's position as days from min
-      const todayOffset = Math.max(0, this.daysBetween(range.min, now) - 1);
+        // Calculate today's position as days from min
+        const todayOffset = Math.max(0, this.daysBetween(range.min, now) - 1);
 
-      // Default: 6 months before and after today
-      const halfYear = 182;
-      const start = Math.max(0, todayOffset - halfYear);
-      const end = Math.min(totalDays, todayOffset + halfYear);
+        // Default: 6 months before and after today
+        const halfYear = 182;
+        const start = Math.max(0, todayOffset - halfYear);
+        const end = Math.min(totalDays, todayOffset + halfYear);
 
-      this.timelineRange.set([start, end]);
-    }, { allowSignalWrites: true });
+        this.timelineRange.set([start, end]);
+      },
+      { allowSignalWrites: true },
+    );
   }
 
   // Computed: grouped positions
@@ -934,9 +949,7 @@ export class PositionGanttComponent {
           r.position.objectCode?.toLowerCase().includes(search) ||
           r.position.tariffGroup?.toLowerCase().includes(search) ||
           r.position.organizationUnit?.toLowerCase().includes(search) ||
-          r.position.assignments.some((a) =>
-            a.personnelNumber.toLowerCase().includes(search)
-          )
+          r.position.assignments.some((a) => a.personnelNumber.toLowerCase().includes(search)),
       );
     }
 
@@ -1003,7 +1016,7 @@ export class PositionGanttComponent {
   // Calculate time slices for a position
   private calculateTimeSlices(
     group: GroupedPosition,
-    range: { start: Date; end: Date }
+    range: { start: Date; end: Date },
   ): TimeSlice[] {
     const assignments = group.assignments;
 
@@ -1039,7 +1052,7 @@ export class PositionGanttComponent {
       const sliceEnd = new Date(sortedBoundaries[i + 1]);
 
       const activeAssignments = assignments.filter(
-        (a) => a.startDate <= sliceEnd && a.endDate >= sliceStart
+        (a) => a.startDate <= sliceEnd && a.endDate >= sliceStart,
       );
 
       const totalFill = activeAssignments.reduce((sum, a) => sum + a.percentage, 0);
@@ -1057,7 +1070,7 @@ export class PositionGanttComponent {
 
   private buildSegmentTooltip(
     group: GroupedPosition,
-    segment: { assignments: EmployeeAssignment[]; fillPercentage: number }
+    segment: { assignments: EmployeeAssignment[]; fillPercentage: number },
   ): string {
     const lines: string[] = [
       group.objectDescription || group.objectCode || 'Unbekannte Stelle',
@@ -1072,9 +1085,7 @@ export class PositionGanttComponent {
       for (const a of segment.assignments) {
         const start = a.startDate.toLocaleDateString('de-DE');
         const end =
-          a.endDate.getFullYear() >= 2099
-            ? 'unbefristet'
-            : a.endDate.toLocaleDateString('de-DE');
+          a.endDate.getFullYear() >= 2099 ? 'unbefristet' : a.endDate.toLocaleDateString('de-DE');
         lines.push(`  ${a.personnelNumber}: ${a.percentage}% (${start} - ${end})`);
       }
 

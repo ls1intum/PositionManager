@@ -69,9 +69,7 @@
     <div class="filter-stats">
       {{ filteredRows().length }} von {{ ganttRows().length }} Stellen
       @if (totalWhiteSpots() > 0) {
-        <span class="white-spot-count">
-          ({{ totalWhiteSpots() }} mit Lücken)
-        </span>
+        <span class="white-spot-count"> ({{ totalWhiteSpots() }} mit Lücken) </span>
       }
     </div>
     <ng-content select="[header-slot]" />
@@ -121,10 +119,7 @@
       <div class="gantt-year-spacer"></div>
       <div class="gantt-year-headers">
         @for (year of yearHeaders(); track year.year) {
-          <div
-            class="gantt-year"
-            [style.width.%]="year.widthPercent"
-          >
+          <div class="gantt-year" [style.width.%]="year.widthPercent">
             {{ year.year }}
           </div>
         }
@@ -164,10 +159,7 @@
       </div>
     }
 
-    <cdk-virtual-scroll-viewport
-      [itemSize]="rowHeight"
-      class="gantt-viewport"
-    >
+    <cdk-virtual-scroll-viewport [itemSize]="rowHeight" class="gantt-viewport">
       <div
         *cdkVirtualFor="let row of filteredRows(); trackBy: trackByObjectId"
         class="gantt-row"
@@ -180,10 +172,7 @@
           <span class="qual-badge" [class]="row.gradeClass">
             {{ row.position.tariffGroup || '-' }}
           </span>
-          <span
-            class="position-desc"
-            [title]="row.position.objectDescription ?? ''"
-          >
+          <span class="position-desc" [title]="row.position.objectDescription ?? ''">
             {{ row.position.objectDescription || row.position.objectCode || 'Unbekannt' }}
           </span>
           <span
@@ -241,21 +230,15 @@
     <div class="legend-left">
       <div class="legend-section">
         <span class="legend-title">Besetzung:</span>
-        <span class="legend-item">
-          <span class="legend-color filled"></span> Besetzt
-        </span>
-        <span class="legend-item">
-          <span class="legend-color gap"></span> Lücke (White Spot)
-        </span>
+        <span class="legend-item"> <span class="legend-color filled"></span> Besetzt </span>
+        <span class="legend-item"> <span class="legend-color gap"></span> Lücke (White Spot) </span>
       </div>
       <div class="legend-section">
         <span class="legend-title">Bänder:</span>
         <span class="legend-item">25% (oben) → 100% (unten)</span>
       </div>
       <div class="legend-section">
-        <span class="legend-item">
-          <span class="today-line"></span> Heute
-        </span>
+        <span class="legend-item"> <span class="today-line"></span> Heute </span>
       </div>
     </div>
     <div class="legend-right">

@@ -7,15 +7,15 @@
 p-select-overlay,
 .p-select-overlay,
 .p-component-overlay,
-[class*="select-overlay"],
-[class*="dropdown-panel"],
+[class*='select-overlay'],
+[class*='dropdown-panel'],
 p-overlay-panel {
   font-size: 0.65rem !important;
 
-  input[type="text"],
-  input[class*="filter"],
-  [class*="filter-input"],
-  [class*="search"],
+  input[type='text'],
+  input[class*='filter'],
+  [class*='filter-input'],
+  [class*='search'],
   .p-inputtext {
     font-size: 0.65rem !important;
     padding: 0.15rem 0.3rem !important;
@@ -24,17 +24,17 @@ p-overlay-panel {
     box-sizing: border-box !important;
   }
 
-  [class*="header"] {
+  [class*='header'] {
     padding: 0.25rem !important;
   }
 
-  [class*="items-wrapper"],
-  [class*="list-container"] {
+  [class*='items-wrapper'],
+  [class*='list-container'] {
     max-height: 180px !important;
   }
 
-  [class*="option"],
-  [class*="item"]:not([class*="items"]) {
+  [class*='option'],
+  [class*='item']:not([class*='items']) {
     font-size: 0.65rem !important;
     padding: 0.2rem 0.4rem !important;
     min-height: unset !important;

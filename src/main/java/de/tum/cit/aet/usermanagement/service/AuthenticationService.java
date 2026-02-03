@@ -29,12 +29,24 @@ public class AuthenticationService {
         this.staffPlanProperties = staffPlanProperties;
     }
 
+    /**
+     * Gets the authenticated user from JWT token, syncing roles from Keycloak.
+     *
+     * @param jwt the JWT authentication token
+     * @return the authenticated user
+     */
     @Transactional
     public User getAuthenticatedUser(JwtAuthenticationToken jwt) {
         // Always update to sync roles from JWT
         return updateAuthenticatedUser(jwt);
     }
 
+    /**
+     * Gets the authenticated user with research group eagerly loaded.
+     *
+     * @param jwt the JWT authentication token
+     * @return the authenticated user with research group
+     */
     @Transactional
     public User getAuthenticatedUserWithResearchGroup(JwtAuthenticationToken jwt) {
         // Always update to sync roles from JWT
