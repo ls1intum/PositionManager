@@ -5,12 +5,12 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -70,10 +70,6 @@ public class User {
 
     @Column(name = "special_skills")
     private String specialSkills;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "custom_data", columnDefinition = "jsonb")
-    private Map<String, String> customData = new HashMap<>();
 
     @Column(name = "enrolled_at")
     private Instant enrolledAt;
