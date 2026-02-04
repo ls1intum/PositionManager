@@ -8,9 +8,11 @@
     @if (securityStore.isLoading()) {
       <span>Loading...</span>
     } @else if (securityStore.user()) {
-      <a routerLink="/positions" routerLinkActive="active" class="nav-link">Positions</a>
-      @if (securityStore.isAdmin()) {
-        <a routerLink="/admin/users" routerLinkActive="active" class="nav-link">Users</a>
+      @if (securityStore.hasAnyRole()) {
+        <a routerLink="/positions" routerLinkActive="active" class="nav-link">Positions</a>
+        @if (securityStore.isAdmin()) {
+          <a routerLink="/admin/users" routerLinkActive="active" class="nav-link">Users</a>
+        }
       }
       <span class="user-info">
         {{ securityStore.user()?.firstName }} {{ securityStore.user()?.lastName }}
@@ -23,5 +25,15 @@
 </header>
 
 <main class="main">
-  <router-outlet />
+  @if (securityStore.user() && !securityStore.hasAnyRole()) {
+    <app-access-denied />
+  } @else {
+    <router-outlet />
+  }
 </main>
+
+<footer class="footer">
+  <a routerLink="/impressum">Impressum</a>
+  <span class="separator">|</span>
+  <a routerLink="/datenschutz">Datenschutz</a>
+</footer>

@@ -65,12 +65,13 @@ The Angular dev server will start at http://localhost:4200
 
 The following test users are pre-configured in Keycloak:
 
-| Username   | Password   | Role        |
-|------------|------------|-------------|
-| admin      | admin      | admin       |
-| jobmanager | jobmanager | job_manager |
-| professor  | professor  | professor   |
-| employee   | employee   | employee    |
+| Username   | Password   | Role        | Description |
+|------------|------------|-------------|-------------|
+| admin      | admin      | admin       | Full access to all features |
+| jobmanager | jobmanager | job_manager | Can manage positions and upload data |
+| professor  | professor  | professor   | Can view positions |
+| employee   | employee   | employee    | Can view positions |
+| user       | user       | *(none)*    | No access - shows access denied message |
 
 ## Project Structure
 

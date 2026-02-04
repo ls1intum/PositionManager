@@ -64,7 +64,7 @@
         (ngModelChange)="showOnlyUnfilled.set($event)"
         [binary]="true"
       />
-      <label for="unfilled">Nur unbesetzte Stellen</label>
+      <label for="unfilled">Unvollständig besetzte Stellen</label>
     </div>
     <div class="filter-stats">
       {{ filteredRows().length }} von {{ ganttRows().length }} Stellen
@@ -242,14 +242,16 @@
       </div>
     </div>
     <div class="legend-right">
-      <p-button
-        label="Daten löschen"
-        icon="pi pi-trash"
-        severity="danger"
-        [outlined]="true"
-        size="small"
-        (onClick)="onClearData()"
-      />
+      @if (canManage()) {
+        <p-button
+          label="Daten löschen"
+          icon="pi pi-trash"
+          severity="danger"
+          [outlined]="true"
+          size="small"
+          (onClick)="onClearData()"
+        />
+      }
     </div>
   </div>
 </div>

@@ -142,3 +142,28 @@
     font-size: 0.875rem;
   }
 }
+
+.footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--card-bg);
+  border-top: 1px solid var(--border-color);
+  font-size: 0.75rem;
+
+  a {
+    color: var(--text-muted);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--primary-color);
+      text-decoration: underline;
+    }
+  }
+
+  .separator {
+    color: var(--border-color);
+  }
+}

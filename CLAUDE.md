@@ -70,12 +70,13 @@ Follows standard layered architecture: Web (REST controllers) → Service → Re
 
 ## Test Users (Keycloak)
 
-| Username   | Password   | Role        |
-|------------|------------|-------------|
-| admin      | admin      | admin       |
-| jobmanager | jobmanager | job_manager |
-| professor  | professor  | professor   |
-| employee   | employee   | employee    |
+| Username   | Password   | Role        | Description |
+|------------|------------|-------------|-------------|
+| admin      | admin      | admin       | Full access |
+| jobmanager | jobmanager | job_manager | Can manage positions |
+| professor  | professor  | professor   | Can view positions |
+| employee   | employee   | employee    | Can view positions |
+| user       | user       | *(none)*    | No access (test) |
 
 ## Configuration
 

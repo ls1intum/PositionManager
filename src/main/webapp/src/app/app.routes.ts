@@ -19,4 +19,14 @@ export const routes: Routes = [
       import('./features/admin/admin-users.component').then((m) => m.AdminUsersComponent),
     canActivate: [adminGuard],
   },
+  {
+    path: 'impressum',
+    loadComponent: () =>
+      import('./features/legal/impressum.component').then((m) => m.ImpressumComponent),
+  },
+  {
+    path: 'datenschutz',
+    loadComponent: () =>
+      import('./features/legal/privacy.component').then((m) => m.PrivacyComponent),
+  },
 ];

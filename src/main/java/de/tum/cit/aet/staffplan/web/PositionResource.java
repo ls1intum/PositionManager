@@ -25,6 +25,7 @@ public class PositionResource {
 
     /**
      * Returns all positions, optionally filtered by research group.
+     * Requires one of the roles: admin, job_manager, professor, or employee.
      *
      * @param researchGroupId optional research group ID to filter by
      * @return list of positions
@@ -32,6 +33,10 @@ public class PositionResource {
     @GetMapping
     public ResponseEntity<List<PositionDTO>> getPositions(
             @RequestParam(required = false) UUID researchGroupId) {
+
+        if (!currentUserProvider.hasAnyRole()) {
+            return ResponseEntity.status(403).build();
+        }
 
         List<PositionDTO> positions;
         if (researchGroupId != null) {

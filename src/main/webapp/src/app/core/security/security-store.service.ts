@@ -26,6 +26,9 @@ export class SecurityStore {
   readonly isJobManager = computed(() => this.hasRole('job_manager'));
   readonly isProfessor = computed(() => this.hasRole('professor'));
   readonly isEmployee = computed(() => this.hasRole('employee'));
+  readonly hasAnyRole = computed(
+    () => this.isAdmin() || this.isJobManager() || this.isProfessor() || this.isEmployee(),
+  );
 
   constructor() {
     this.onInit();

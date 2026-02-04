@@ -629,6 +629,7 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
 })
 export class PositionGanttComponent {
   readonly positions = input<Position[]>([]);
+  readonly canManage = input<boolean>(false);
   readonly clearData = output<void>();
 
   // Constants
@@ -648,7 +649,7 @@ export class PositionGanttComponent {
   readonly filterRelevanceType = signal<string | null>(null);
   readonly filterDepartment = signal<string | null>(null);
   readonly filterQualification = signal<string | null>(null);
-  readonly showOnlyUnfilled = signal(false);
+  readonly showOnlyUnfilled = signal(true);
 
   // Zoom signal (months to display)
   readonly zoomLevel = signal<ZoomLevel>(12);

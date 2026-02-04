@@ -1,0 +1,153 @@
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+
+@Component({
+  selector: 'app-impressum',
+  template: `
+    <div class="legal-page">
+      <div class="content">
+        <h1>Impressum</h1>
+
+        <section>
+          <h2>Herausgeber</h2>
+          <p>
+            Technische Universität München<br />
+            Postanschrift: Arcisstraße 21, 80333 München<br />
+            Telefon: +49-(0)89-289-01<br />
+            Telefax: +49-(0)89-289-22000<br />
+            E-Mail: poststelle(at)tum.de
+          </p>
+        </section>
+
+        <section>
+          <h2>Vertretungsberechtigt</h2>
+          <p>
+            Die Technische Universität München wird gesetzlich vertreten durch den Präsidenten Prof.
+            Dr. Thomas F. Hofmann.
+          </p>
+        </section>
+
+        <section>
+          <h2>Umsatzsteueridentifikationsnummer</h2>
+          <p>DE811193231 (gemäß § 27a Umsatzsteuergesetz)</p>
+        </section>
+
+        <section>
+          <h2>Verantwortlich für den Inhalt</h2>
+          <p>
+            Prof. Dr. Stephan Krusche<br />
+            Boltzmannstraße 3<br />
+            85748 Garching
+          </p>
+        </section>
+
+        <section>
+          <h2>Nutzungsbedingungen</h2>
+          <p>
+            Texte, Bilder, Grafiken sowie die Gestaltung dieser Internetseiten können dem
+            Urheberrecht unterliegen. Nicht urheberrechtlich geschützt sind nach § 5 des
+            Urheberrechtsgesetz (UrhG) Gesetze, Verordnungen, amtliche Erlasse und Bekanntmachungen
+            sowie Entscheidungen und amtlich verfasste Leitsätze zu Entscheidungen und andere
+            amtliche Werke, die im amtlichen Interesse zur allgemeinen Kenntnisnahme veröffentlicht
+            worden sind, mit der Einschränkung, dass die Bestimmungen über Änderungsverbot und
+            Quellenangabe in § 62 Abs. 1 bis 3 und § 63 Abs. 1 und 2 UrhG entsprechend anzuwenden
+            sind.
+          </p>
+          <p>
+            Als Privatperson dürfen Sie urheberrechtlich geschütztes Material zum privaten und
+            sonstigen eigenen Gebrauch im Rahmen des § 53 UrhG verwenden. Eine Vervielfältigung oder
+            Verwendung urheberrechtlich geschützten Materials dieser Seiten oder Teilen davon in
+            anderen elektronischen oder gedruckten Publikationen und deren Veröffentlichung ist nur
+            mit unserer Einwilligung gestattet. Diese Einwilligung erteilen auf Anfrage die für den
+            Inhalt Verantwortlichen. Der Nachdruck und die Auswertung von Pressemitteilungen und
+            Reden sind mit Quellenangabe allgemein gestattet. Weiterhin können Texte, Bilder,
+            Grafiken und sonstige Dateien ganz oder teilweise dem Urheberrecht Dritter unterliegen.
+            Auch über das Bestehen möglicher Rechte Dritter geben Ihnen die für den Inhalt
+            Verantwortlichen nähere Auskünfte.
+          </p>
+        </section>
+
+        <section>
+          <h2>Haftungsausschluss</h2>
+          <p>
+            Alle auf dieser Internetseite bereitgestellten Informationen haben wir nach bestem
+            Wissen und Gewissen erarbeitet und geprüft. Eine Gewähr für die jederzeitige Aktualität,
+            Richtigkeit, Vollständigkeit und Verfügbarkeit der bereit gestellten Informationen
+            können wir allerdings nicht übernehmen. Ein Vertragsverhältnis mit den Nutzern des
+            Internetangebots kommt nicht zustande.
+          </p>
+          <p>
+            Wir haften nicht für Schäden, die durch die Nutzung dieses Internetangebots entstehen.
+            Dieser Haftungsausschluss gilt nicht, soweit die Vorschriften des § 839 BGB (Haftung bei
+            Amtspflichtverletzung) einschlägig sind. Für etwaige Schäden, die beim Aufrufen oder
+            Herunterladen von Daten durch Schadsoftware oder der Installation oder Nutzung von
+            Software verursacht werden, übernehmen wir keine Haftung.
+          </p>
+          <p>
+            Falls im Einzelfall erforderlich: Der Haftungsausschluss gilt nicht für Informationen,
+            die in den Anwendungsbereich der Europäischen Dienstleistungsrichtlinie (Richtlinie
+            2006/123/EG – DLRL) fallen. Für diese Informationen wird die Richtigkeit und Aktualität
+            gewährleistet.
+          </p>
+        </section>
+
+        <section>
+          <h2>Links</h2>
+          <p>
+            Von unseren eigenen Inhalten sind Querverweise („Links") auf die Webseiten anderer
+            Anbieter zu unterscheiden. Durch diese Links ermöglichen wir lediglich den Zugang zur
+            Nutzung fremder Inhalte nach § 8 Telemediengesetz. Bei der erstmaligen Verknüpfung mit
+            diesen Internetangeboten haben wir diese fremden Inhalte daraufhin überprüft, ob durch
+            sie eine mögliche zivilrechtliche oder strafrechtliche Verantwortlichkeit ausgelöst
+            wird. Wir können diese fremden Inhalte aber nicht ständig auf Veränderungen überprüfen
+            und daher auch keine Verantwortung dafür übernehmen. Für illegale, fehlerhafte oder
+            unvollständige Inhalte und insbesondere für Schäden, die aus der Nutzung oder
+            Nichtnutzung von Informationen Dritter entstehen, haftet allein der jeweilige Anbieter
+            der Seite.
+          </p>
+        </section>
+      </div>
+    </div>
+  `,
+  styles: `
+    :host {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    .legal-page {
+      flex: 1;
+      padding: 2rem;
+    }
+
+    .content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 2rem 0;
+      color: var(--p-text-color);
+    }
+
+    h2 {
+      margin: 1.5rem 0 0.5rem 0;
+      font-size: 1.1rem;
+      color: var(--p-text-color);
+    }
+
+    section:first-of-type h2 {
+      margin-top: 0;
+    }
+
+    p {
+      margin: 0.5rem 0;
+      color: var(--p-text-muted-color);
+      line-height: 1.6;
+    }
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ImpressumComponent {}

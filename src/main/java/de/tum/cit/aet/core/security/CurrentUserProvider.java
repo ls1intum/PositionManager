@@ -74,6 +74,10 @@ public class CurrentUserProvider {
       return getUser().hasAnyGroup("admin");
    }
 
+   public boolean hasAnyRole() {
+      return isAdmin() || isJobManager() || isProfessor() || isEmployee();
+   }
+
    public boolean canSeeAllResearchGroups() {
       return isAnonymous() || isAdmin();
    }
