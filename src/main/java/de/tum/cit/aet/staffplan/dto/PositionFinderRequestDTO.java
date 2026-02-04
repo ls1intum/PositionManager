@@ -1,6 +1,7 @@
 package de.tum.cit.aet.staffplan.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -11,7 +12,8 @@ public record PositionFinderRequestDTO(
         LocalDate endDate,
         String employeeGrade,
         Integer fillPercentage,
-        UUID researchGroupId
+        UUID researchGroupId,
+        List<String> relevanceTypes
 ) {
     /**
      * Returns the fill percentage as a decimal (0-100 -> actual percentage).

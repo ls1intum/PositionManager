@@ -14,4 +14,8 @@ export class PositionFinderService {
   search(request: PositionFinderRequest): Observable<PositionFinderResponse> {
     return this.http.post<PositionFinderResponse>(`${this.apiUrl}/search`, request);
   }
+
+  getRelevanceTypes(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/relevance-types`);
+  }
 }

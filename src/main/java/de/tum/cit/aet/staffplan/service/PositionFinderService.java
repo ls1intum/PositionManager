@@ -56,11 +56,18 @@ public class PositionFinderService {
 
         BigDecimal employeeMonthlyCost = calculateMonthlyCost(employeeGradeValue, fillPercentage);
 
+        // Prepare relevance types filter (treat empty list as null = no filter)
+        List<String> relevanceTypes = request.relevanceTypes();
+        if (relevanceTypes != null && relevanceTypes.isEmpty()) {
+            relevanceTypes = null;
+        }
+
         // Find candidate positions
         List<Position> candidates = positionRepository.findCandidatePositions(
                 request.startDate(),
                 request.endDate(),
-                request.researchGroupId());
+                request.researchGroupId(),
+                relevanceTypes);
 
         log.info("Found {} candidate positions for grade {} at {}%",
                 candidates.size(), request.employeeGrade(), fillPercentage);

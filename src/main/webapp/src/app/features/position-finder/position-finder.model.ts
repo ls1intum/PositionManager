@@ -4,6 +4,7 @@ export interface PositionFinderRequest {
   employeeGrade: string;
   fillPercentage: number;
   researchGroupId?: string | null;
+  relevanceTypes?: string[] | null;
 }
 
 export type MatchQuality = 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR';

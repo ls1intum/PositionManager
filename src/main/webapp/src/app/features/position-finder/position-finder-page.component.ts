@@ -4,6 +4,7 @@ import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { Card } from 'primeng/card';
 import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
+import { MultiSelect } from 'primeng/multiselect';
 import { InputNumber } from 'primeng/inputnumber';
 import { DatePicker } from 'primeng/datepicker';
 import { TableModule } from 'primeng/table';
@@ -27,6 +28,7 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
     Card,
     Button,
     Select,
+    MultiSelect,
     InputNumber,
     DatePicker,
     TableModule,
@@ -90,6 +92,24 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
                 id="endDate"
                 [(ngModel)]="endDate"
                 dateFormat="dd.mm.yy"
+                [style]="{ width: '100%' }"
+              />
+            </div>
+          </div>
+
+          <div class="form-row form-row-single">
+            <div class="form-field">
+              <label for="relevanceTypes">Relevanzart</label>
+              <p-multiselect
+                id="relevanceTypes"
+                [(ngModel)]="selectedRelevanceTypes"
+                [options]="relevanceTypeOptions()"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Alle Relevanzarten"
+                [showClear]="true"
+                [filter]="true"
+                filterPlaceholder="Suchen..."
                 [style]="{ width: '100%' }"
               />
             </div>
@@ -324,6 +344,11 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
       grid-template-columns: repeat(4, 1fr);
       gap: 1rem;
       margin-bottom: 1rem;
+
+      &.form-row-single {
+        grid-template-columns: 1fr;
+        max-width: 300px;
+      }
     }
 
     .form-field {
@@ -609,6 +634,7 @@ export class PositionFinderPageComponent {
   private readonly messageService = inject(MessageService);
 
   readonly grades = signal<GradeValue[]>([]);
+  readonly relevanceTypes = signal<string[]>([]);
   readonly searching = signal(false);
   readonly searchResult = signal<PositionFinderResponse | null>(null);
 
@@ -616,6 +642,7 @@ export class PositionFinderPageComponent {
   fillPercentage = 50;
   startDate: Date | null = null;
   endDate: Date | null = null;
+  selectedRelevanceTypes: string[] = [];
 
   readonly gradeOptions = computed(() =>
     this.grades()
@@ -626,8 +653,13 @@ export class PositionFinderPageComponent {
       })),
   );
 
+  readonly relevanceTypeOptions = computed(() =>
+    this.relevanceTypes().map((t) => ({ label: t, value: t })),
+  );
+
   constructor() {
     this.loadGrades();
+    this.loadRelevanceTypes();
   }
 
   private loadGrades(): void {
@@ -638,6 +670,19 @@ export class PositionFinderPageComponent {
           severity: 'error',
           summary: 'Fehler',
           detail: 'Besoldungsgruppen konnten nicht geladen werden',
+        });
+      },
+    });
+  }
+
+  private loadRelevanceTypes(): void {
+    this.positionFinderService.getRelevanceTypes().subscribe({
+      next: (types) => this.relevanceTypes.set(types),
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Fehler',
+          detail: 'Relevanzarten konnten nicht geladen werden',
         });
       },
     });
@@ -665,6 +710,7 @@ export class PositionFinderPageComponent {
       endDate: this.formatDate(this.endDate),
       employeeGrade: this.selectedGrade,
       fillPercentage: this.fillPercentage,
+      relevanceTypes: this.selectedRelevanceTypes.length > 0 ? this.selectedRelevanceTypes : null,
     };
 
     this.positionFinderService.search(request).subscribe({

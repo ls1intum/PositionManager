@@ -33,12 +33,14 @@ public interface PositionRepository extends JpaRepository<Position, UUID> {
               AND p.tariffGroup IS NOT NULL AND p.tariffGroup <> ''
               AND (p.personnelNumber IS NULL OR p.personnelNumber <> '00000000')
               AND (:researchGroupId IS NULL OR p.researchGroup.id = :researchGroupId)
+              AND (:relevanceTypes IS NULL OR p.positionRelevanceType IN :relevanceTypes)
             ORDER BY p.tariffGroup, p.startDate
             """)
     List<Position> findCandidatePositions(
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
-            @Param("researchGroupId") UUID researchGroupId);
+            @Param("researchGroupId") UUID researchGroupId,
+            @Param("relevanceTypes") List<String> relevanceTypes);
 
     /**
      * Counts the number of assignments (occupied entries) for a position based on personnel number.
@@ -65,4 +67,14 @@ public interface PositionRepository extends JpaRepository<Position, UUID> {
               AND p.personnelNumber <> '00000000'
             """)
     java.math.BigDecimal sumAssignedPercentageByObjectId(@Param("objectId") String objectId);
+
+    /**
+     * Returns all distinct position relevance types.
+     */
+    @Query("""
+            SELECT DISTINCT p.positionRelevanceType FROM Position p
+            WHERE p.positionRelevanceType IS NOT NULL AND p.positionRelevanceType <> ''
+            ORDER BY p.positionRelevanceType
+            """)
+    List<String> findDistinctRelevanceTypes();
 }
