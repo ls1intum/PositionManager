@@ -27,6 +27,12 @@ public interface ResearchGroupRepository extends JpaRepository<ResearchGroup, UU
     @Query("SELECT rg FROM ResearchGroup rg WHERE rg.archived = false AND LOWER(rg.professorLastName) = LOWER(:lastName) AND LOWER(rg.professorFirstName) = LOWER(:firstName)")
     Optional<ResearchGroup> findByProfessorNameIgnoreCase(@Param("firstName") String firstName, @Param("lastName") String lastName);
 
+    @Query("SELECT rg FROM ResearchGroup rg WHERE rg.archived = false AND rg.professorUniversityId = :universityId AND rg.head IS NULL")
+    Optional<ResearchGroup> findByProfessorUniversityIdAndHeadIsNull(@Param("universityId") String universityId);
+
+    @Query("SELECT rg FROM ResearchGroup rg WHERE rg.archived = false AND LOWER(rg.professorEmail) = LOWER(:email) AND rg.head IS NULL")
+    Optional<ResearchGroup> findByProfessorEmailIgnoreCaseAndHeadIsNull(@Param("email") String email);
+
     @Query("SELECT rg FROM ResearchGroup rg LEFT JOIN FETCH rg.aliases WHERE rg.id = :id")
     Optional<ResearchGroup> findByIdWithAliases(@Param("id") UUID id);
 

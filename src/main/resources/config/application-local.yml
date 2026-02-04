@@ -1,0 +1,18 @@
+# Local development configuration overrides
+# This file is loaded when spring.profiles.active=local
+
+staffplan:
+  keycloak:
+    service:
+      client-id: staffplan-service-client
+      client-secret: staffplan-service-secret
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+logging:
+  level:
+    de.tum.cit.aet: DEBUG

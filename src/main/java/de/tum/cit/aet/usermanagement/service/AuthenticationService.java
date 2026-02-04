@@ -87,6 +87,9 @@ public class AuthenticationService {
             user.setLastName(lastName);
         }
 
+        // Update last login timestamp
+        user.setLastLoginAt(Instant.now());
+
         User savedUser = userRepository.save(user);
 
         // Try to match professor to their research group

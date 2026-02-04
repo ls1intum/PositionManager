@@ -5,10 +5,13 @@
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
                    objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
 
-    <include file="db/changelog/001-changelog.xml"/>
-    <include file="db/changelog/002-grade-values.xml"/>
-    <include file="db/changelog/003-research-group-extensions.xml"/>
-    <include file="db/changelog/004-professor-keycloak-mapping.xml"/>
-    <include file="db/changelog/005-user-last-login.xml"/>
+    <changeSet id="005-01" author="system">
+        <comment>Add last_login_at column to users table to track when users last logged in</comment>
+        <addColumn tableName="users">
+            <column name="last_login_at" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
 
 </databaseChangeLog>

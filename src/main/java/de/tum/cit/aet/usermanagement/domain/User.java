@@ -84,6 +84,9 @@ public class User {
     @Column(name = "joined_at", nullable = false)
     private Instant joinedAt;
 
+    @Column(name = "last_login_at")
+    private Instant lastLoginAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "research_group_id")
     private ResearchGroup researchGroup;

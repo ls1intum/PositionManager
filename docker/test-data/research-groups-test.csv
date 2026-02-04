@@ -1,0 +1,8 @@
+firstName,lastName,groupName,abbreviation,department,email,login
+Maria,Schneider,Machine Learning,I-ML,Computer Science,maria.schneider@tum.de,ml52sch
+Thomas,Weber,Computer Vision,I-CV,Computer Science,thomas.weber@tum.de,cv38web
+Anna,Mueller,Database Systems,I-DBS,Computer Science,anna.mueller@tum.de,db45mue
+Michael,Fischer,Software Engineering,I-SE,Computer Science,michael.fischer@tum.de,se29fis
+Laura,Hoffmann,Artificial Intelligence,I-AI,Computer Science,laura.hoffmann@tum.de,ai61hof
+,,Quantum Computing,I-QC,Computer Science,,
+,,Robotics,CE-ROB,Computer Engineering,,

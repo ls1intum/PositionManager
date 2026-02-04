@@ -2,9 +2,15 @@ package de.tum.cit.aet.usermanagement.service;
 
 import de.tum.cit.aet.usermanagement.domain.ResearchGroup;
 import de.tum.cit.aet.usermanagement.domain.ResearchGroupAlias;
+import de.tum.cit.aet.usermanagement.domain.User;
+import de.tum.cit.aet.usermanagement.domain.UserGroup;
+import de.tum.cit.aet.usermanagement.domain.key.UserGroupId;
+import de.tum.cit.aet.usermanagement.dto.KeycloakUserDTO;
 import de.tum.cit.aet.usermanagement.dto.ResearchGroupDTO;
 import de.tum.cit.aet.usermanagement.dto.ResearchGroupImportResultDTO;
 import de.tum.cit.aet.usermanagement.repository.ResearchGroupRepository;
+import de.tum.cit.aet.usermanagement.repository.UserGroupRepository;
+import de.tum.cit.aet.usermanagement.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,13 +27,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ResearchGroupService {
 
+    private static final String PROFESSOR_ROLE = "professor";
+
     private final ResearchGroupRepository researchGroupRepository;
+    private final UserRepository userRepository;
+    private final UserGroupRepository userGroupRepository;
+    private final KeycloakAdminService keycloakAdminService;
 
     /**
      * Returns all research groups (not archived).
@@ -145,8 +157,17 @@ public class ResearchGroupService {
     }
 
     /**
-     * Imports research groups from a CSV file.
-     * CSV format: firstName,lastName,groupName,abbreviation,department
+     * Imports research groups from a CSV file with optional Keycloak lookup for professor matching.
+     * CSV format: firstName,lastName,groupName,abbreviation,department[,email[,login]]
+     *
+     * If 'login' column is present, it is used directly as the professor's universityId.
+     * If 'login' is missing but 'email' is present and Keycloak service is configured:
+     * - Searches Keycloak/LDAP by email to find the professor's universityId
+     * - If exactly one user is found, the universityId is imported
+     * - If no user or multiple users are found, the group is flagged for manual mapping
+     *
+     * If both 'login' and 'email' are missing, the group is flagged for manual mapping
+     * and will be matched during the professor's first login.
      *
      * @param file the CSV file to import
      * @return the import result with counts and errors
@@ -239,6 +260,8 @@ public class ResearchGroupService {
         String groupName = getValueByHeader(values, headerIndices, "groupname");
         String abbreviation = getValueByHeader(values, headerIndices, "abbreviation");
         String department = getValueByHeader(values, headerIndices, "department");
+        String email = getValueByHeader(values, headerIndices, "email");
+        String login = getValueByHeader(values, headerIndices, "login");
 
         if (groupName == null || groupName.isBlank()) {
             result.addError("Line " + lineNumber + ": groupName is required");
@@ -267,7 +290,23 @@ public class ResearchGroupService {
             existing.setProfessorFirstName(firstName);
             existing.setProfessorLastName(lastName);
             existing.setDepartment(department);
+            existing.setProfessorEmail(email);
+
+            // Use login directly if provided, otherwise perform Keycloak lookup
+            if (login != null && !login.isBlank()) {
+                existing.setProfessorUniversityId(login);
+                existing.setNeedsManualMapping(false);
+                existing.setMappingNotes(null);
+                log.info("Using provided login '{}' for group '{}'", login, groupName);
+            } else {
+                lookupProfessorInKeycloak(existing);
+            }
+
             researchGroupRepository.save(existing);
+
+            // Create user and assign as head if we have the login
+            createAndAssignProfessor(existing);
+
             result.incrementUpdated();
         } else if (existingByAbbr.isPresent()) {
             result.addWarning("Line " + lineNumber + ": Abbreviation " + abbreviation + " already exists for different group");
@@ -280,8 +319,176 @@ public class ResearchGroupService {
             newGroup.setProfessorFirstName(firstName);
             newGroup.setProfessorLastName(lastName);
             newGroup.setDepartment(department);
+            newGroup.setProfessorEmail(email);
+
+            // Use login directly if provided, otherwise perform Keycloak lookup
+            if (login != null && !login.isBlank()) {
+                newGroup.setProfessorUniversityId(login);
+                newGroup.setNeedsManualMapping(false);
+                newGroup.setMappingNotes(null);
+                log.info("Using provided login '{}' for group '{}'", login, groupName);
+            } else {
+                lookupProfessorInKeycloak(newGroup);
+            }
+
             researchGroupRepository.save(newGroup);
+
+            // Create user and assign as head if we have the login
+            createAndAssignProfessor(newGroup);
+
             result.incrementCreated();
+        }
+    }
+
+    /**
+     * Creates a user for the professor (if not exists) and assigns them as head of the research group.
+     * Only creates the user if we have a professorUniversityId (login).
+     */
+    private void createAndAssignProfessor(ResearchGroup group) {
+        String login = group.getProfessorUniversityId();
+        if (login == null || login.isBlank()) {
+            return; // No login available, professor will be matched on first login
+        }
+
+        // Skip if group already has a head
+        if (group.getHead() != null) {
+            log.debug("Group '{}' already has a head, skipping user creation", group.getName());
+            return;
+        }
+
+        try {
+            // Find or create user
+            User professor = userRepository.findByUniversityId(login)
+                    .orElseGet(() -> {
+                        User newUser = new User();
+                        newUser.setUniversityId(login);
+                        newUser.setFirstName(group.getProfessorFirstName());
+                        newUser.setLastName(group.getProfessorLastName());
+                        newUser.setEmail(group.getProfessorEmail());
+                        return userRepository.save(newUser);
+                    });
+
+            // Update user info if it was existing but had missing data
+            boolean updated = false;
+            if (professor.getFirstName() == null && group.getProfessorFirstName() != null) {
+                professor.setFirstName(group.getProfessorFirstName());
+                updated = true;
+            }
+            if (professor.getLastName() == null && group.getProfessorLastName() != null) {
+                professor.setLastName(group.getProfessorLastName());
+                updated = true;
+            }
+            if (professor.getEmail() == null && group.getProfessorEmail() != null) {
+                professor.setEmail(group.getProfessorEmail());
+                updated = true;
+            }
+            if (updated) {
+                professor = userRepository.save(professor);
+            }
+
+            // Assign professor role if not already assigned
+            if (!professor.hasAnyGroup(PROFESSOR_ROLE)) {
+                assignProfessorRole(professor);
+            }
+
+            // Set as head of research group
+            group.setHead(professor);
+            professor.setResearchGroup(group);
+            researchGroupRepository.save(group);
+            userRepository.save(professor);
+
+            log.info("Created/assigned professor '{}' ({}) as head of group '{}'",
+                    professor.getFirstName() + " " + professor.getLastName(), login, group.getName());
+
+        } catch (Exception e) {
+            log.warn("Failed to create/assign professor for group '{}': {}", group.getName(), e.getMessage());
+            // Don't fail the import, just log the warning
+        }
+    }
+
+    /**
+     * Assigns the professor role to a user.
+     */
+    private void assignProfessorRole(User user) {
+        UserGroupId groupId = new UserGroupId();
+        groupId.setUserId(user.getId());
+        groupId.setRole(PROFESSOR_ROLE);
+
+        UserGroup userGroup = new UserGroup();
+        userGroup.setId(groupId);
+        userGroup.setUser(user);
+
+        userGroupRepository.save(userGroup);
+        user.getGroups().add(userGroup);
+    }
+
+    /**
+     * Performs Keycloak/LDAP lookup to find the professor's universityId.
+     * Prioritizes email lookup, falls back to name lookup if no email is provided.
+     * Catches all exceptions to ensure CSV import continues even if Keycloak lookup fails.
+     */
+    private void lookupProfessorInKeycloak(ResearchGroup group) {
+        if (!keycloakAdminService.isConfigured()) {
+            log.debug("Keycloak service not configured, skipping professor lookup for group: {}", group.getName());
+            flagForManualMapping(group, "Keycloak service not configured");
+            return;
+        }
+
+        String email = group.getProfessorEmail();
+        String firstName = group.getProfessorFirstName();
+        String lastName = group.getProfessorLastName();
+
+        try {
+            List<KeycloakUserDTO> keycloakUsers;
+
+            // Step 1: If email is provided (from CSV import), search by email
+            if (email != null && !email.isBlank()) {
+                keycloakUsers = keycloakAdminService.searchByEmail(email);
+                processKeycloakResults(group, keycloakUsers, "email: " + email);
+            } else if (firstName != null && !firstName.isBlank() && lastName != null && !lastName.isBlank()) {
+                // Step 2: Fallback to name search (less reliable)
+                keycloakUsers = keycloakAdminService.searchByName(firstName, lastName);
+                processKeycloakResults(group, keycloakUsers, "name: " + firstName + " " + lastName);
+            } else {
+                // No email or professor name provided
+                flagForManualMapping(group, "No email or professor name provided");
+                log.debug("No professor info for group '{}', flagged for manual mapping", group.getName());
+            }
+        } catch (Exception e) {
+            log.warn("Keycloak lookup failed for group '{}': {}", group.getName(), e.getMessage());
+            flagForManualMapping(group, "Keycloak lookup failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Flags a research group for manual mapping with a note.
+     */
+    private void flagForManualMapping(ResearchGroup group, String note) {
+        group.setNeedsManualMapping(true);
+        group.setMappingNotes(note);
+    }
+
+    /**
+     * Processes Keycloak lookup results and updates the research group accordingly.
+     */
+    private void processKeycloakResults(ResearchGroup group, List<KeycloakUserDTO> keycloakUsers, String searchCriteria) {
+        if (keycloakUsers == null || keycloakUsers.isEmpty()) {
+            flagForManualMapping(group, "No user found in Keycloak/LDAP for " + searchCriteria);
+            log.info("No Keycloak user found for group '{}' with {}", group.getName(), searchCriteria);
+        } else if (keycloakUsers.size() == 1) {
+            KeycloakUserDTO user = keycloakUsers.getFirst();
+            group.setProfessorUniversityId(user.username());
+            group.setNeedsManualMapping(false);
+            group.setMappingNotes(null);
+            log.info("Found unique Keycloak user '{}' for group '{}' with {}",
+                    user.username(), group.getName(), searchCriteria);
+        } else {
+            String usernames = keycloakUsers.stream()
+                    .map(KeycloakUserDTO::username)
+                    .collect(Collectors.joining(", "));
+            flagForManualMapping(group, "Multiple users found for " + searchCriteria + ": " + usernames);
+            log.info("Multiple Keycloak users found for group '{}' with {}: {}",
+                    group.getName(), searchCriteria, usernames);
         }
     }
 
@@ -303,6 +510,10 @@ public class ResearchGroupService {
         entity.setDepartment(dto.department());
         entity.setProfessorFirstName(dto.professorFirstName());
         entity.setProfessorLastName(dto.professorLastName());
+        entity.setProfessorEmail(dto.professorEmail());
+        entity.setProfessorUniversityId(dto.professorUniversityId());
+        entity.setNeedsManualMapping(dto.needsManualMapping());
+        entity.setMappingNotes(dto.mappingNotes());
 
         // Update aliases
         if (dto.aliases() != null) {

@@ -15,10 +15,13 @@ import java.util.Optional;
 
 /**
  * Service for automatically assigning professors to their research groups on login.
- * Matches are based on exact (case-insensitive) first name and last name comparison
- * between the user and the professor name fields in research groups.
  *
- * When a user logs in and their name matches a research group's professor name,
+ * Matching priority (most reliable first):
+ * 1. By universityId - matches user's universityId against professor_university_id field
+ * 2. By email - matches user's email against professor_email field
+ * 3. By name - matches user's first/last name against professor name fields (least reliable)
+ *
+ * When a user logs in and matches a research group's professor info,
  * they are automatically assigned the professor role and set as head of that group.
  */
 @Slf4j
@@ -32,7 +35,8 @@ public class ProfessorLoginMatchingService {
     private final UserGroupRepository userGroupRepository;
 
     /**
-     * Attempts to match a user to their research group based on name and assign them as head.
+     * Attempts to match a user to their research group and assign them as head.
+     * Uses a three-tier matching strategy: universityId > email > name.
      * If a match is found, the user is automatically granted the professor role.
      *
      * @param user the user to match
@@ -49,19 +53,14 @@ public class ProfessorLoginMatchingService {
             return;
         }
 
-        // Need both first and last name for matching
-        if (user.getFirstName() == null || user.getLastName() == null) {
-            log.debug("User {} has incomplete name, skipping matching", user.getUniversityId());
-            return;
-        }
-
-        // Try to find matching research group by professor name
-        Optional<ResearchGroup> matchingGroup = researchGroupRepository
-                .findByProfessorNameIgnoreCase(user.getFirstName(), user.getLastName());
+        // Try matching strategies in order of reliability
+        Optional<ResearchGroup> matchingGroup = matchByUniversityId(user)
+                .or(() -> matchByEmail(user))
+                .or(() -> matchByName(user));
 
         if (matchingGroup.isEmpty()) {
-            log.debug("No matching research group found for user: {} {}",
-                    user.getFirstName(), user.getLastName());
+            log.debug("No matching research group found for user: {} (universityId: {})",
+                    user.getFirstName() + " " + user.getLastName(), user.getUniversityId());
             return;
         }
 
@@ -71,6 +70,13 @@ public class ProfessorLoginMatchingService {
         if (group.getHead() != null) {
             log.debug("Research group '{}' already has a head: {}",
                     group.getName(), group.getHead().getUniversityId());
+            return;
+        }
+
+        // Don't assign if the group is flagged for manual mapping
+        if (group.isNeedsManualMapping()) {
+            log.debug("Research group '{}' is flagged for manual mapping, skipping auto-assignment",
+                    group.getName());
             return;
         }
 
@@ -84,8 +90,77 @@ public class ProfessorLoginMatchingService {
         user.setResearchGroup(group);
         researchGroupRepository.save(group);
 
-        log.info("Auto-assigned {} {} as head of research group '{}' with professor role",
-                user.getFirstName(), user.getLastName(), group.getName());
+        log.info("Auto-assigned {} {} (universityId: {}) as head of research group '{}'",
+                user.getFirstName(), user.getLastName(), user.getUniversityId(), group.getName());
+    }
+
+    /**
+     * Primary matching strategy: Match by universityId (most reliable).
+     * This uses the professor_university_id field imported from Keycloak/LDAP lookup.
+     */
+    private Optional<ResearchGroup> matchByUniversityId(User user) {
+        if (user.getUniversityId() == null || user.getUniversityId().isBlank()) {
+            return Optional.empty();
+        }
+
+        Optional<ResearchGroup> match = researchGroupRepository
+                .findByProfessorUniversityIdAndHeadIsNull(user.getUniversityId());
+
+        if (match.isPresent()) {
+            log.debug("Found research group '{}' matching universityId: {}",
+                    match.get().getName(), user.getUniversityId());
+        }
+
+        return match;
+    }
+
+    /**
+     * Secondary matching strategy: Match by email.
+     * This uses the professor_email field (from CSV import).
+     */
+    private Optional<ResearchGroup> matchByEmail(User user) {
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            return Optional.empty();
+        }
+
+        Optional<ResearchGroup> match = researchGroupRepository
+                .findByProfessorEmailIgnoreCaseAndHeadIsNull(user.getEmail());
+
+        if (match.isPresent()) {
+            log.debug("Found research group '{}' matching email: {}",
+                    match.get().getName(), user.getEmail());
+        }
+
+        return match;
+    }
+
+    /**
+     * Tertiary matching strategy: Match by name (least reliable).
+     * This uses exact case-insensitive first name and last name matching.
+     */
+    private Optional<ResearchGroup> matchByName(User user) {
+        // Need both first and last name for matching
+        if (user.getFirstName() == null || user.getLastName() == null) {
+            return Optional.empty();
+        }
+
+        Optional<ResearchGroup> match = researchGroupRepository
+                .findByProfessorNameIgnoreCase(user.getFirstName(), user.getLastName());
+
+        // Only return the match if the group doesn't need manual mapping
+        // (groups flagged for manual mapping shouldn't be auto-assigned via name)
+        if (match.isPresent()) {
+            ResearchGroup group = match.get();
+            if (group.isNeedsManualMapping()) {
+                log.debug("Found research group '{}' matching name {} {}, but it's flagged for manual mapping",
+                        group.getName(), user.getFirstName(), user.getLastName());
+                return Optional.empty();
+            }
+            log.debug("Found research group '{}' matching name: {} {}",
+                    group.getName(), user.getFirstName(), user.getLastName());
+        }
+
+        return match;
     }
 
     private void assignProfessorRole(User user) {

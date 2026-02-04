@@ -54,6 +54,18 @@ public class ResearchGroup {
   @Column(name = "department", length = 100)
   private String department;
 
+  @Column(name = "professor_email", length = 255)
+  private String professorEmail;
+
+  @Column(name = "professor_university_id", length = 50)
+  private String professorUniversityId;
+
+  @Column(name = "needs_manual_mapping", nullable = false)
+  private boolean needsManualMapping = false;
+
+  @Column(name = "mapping_notes", columnDefinition = "TEXT")
+  private String mappingNotes;
+
   @OneToMany(mappedBy = "researchGroup", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ResearchGroupAlias> aliases = new ArrayList<>();
 

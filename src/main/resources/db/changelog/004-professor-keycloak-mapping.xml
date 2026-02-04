@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+                   objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <!-- Add Keycloak mapping fields to research_groups for professor lookup -->
+    <changeSet id="004-1" author="krusche">
+        <addColumn tableName="research_groups">
+            <column name="professor_email" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="professor_university_id" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="needs_manual_mapping" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mapping_notes" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- Index for professor university ID lookup (primary match during login) -->
+    <changeSet id="004-2" author="krusche">
+        <createIndex tableName="research_groups" indexName="idx_research_groups_professor_university_id">
+            <column name="professor_university_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Index for professor email lookup (secondary match during login) -->
+    <changeSet id="004-3" author="krusche">
+        <createIndex tableName="research_groups" indexName="idx_research_groups_professor_email">
+            <column name="professor_email"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

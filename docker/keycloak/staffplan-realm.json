@@ -166,12 +166,36 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "staffplan-service-client",
+      "name": "StaffPlan Service Client",
+      "description": "Service client for backend admin operations (user search)",
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "staffplan-service-secret",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": []
     }
   ],
   "users": [
     {
       "username": "admin",
-      "email": "admin@staffplan.local",
+      "email": "admin@tum.de",
       "firstName": "Admin",
       "lastName": "User",
       "enabled": true,
@@ -193,7 +217,7 @@
     },
     {
       "username": "jobmanager",
-      "email": "jobmanager@staffplan.local",
+      "email": "jobmanager@tum.de",
       "firstName": "Job",
       "lastName": "Manager",
       "enabled": true,
@@ -214,16 +238,104 @@
       }
     },
     {
-      "username": "professor",
-      "email": "professor@staffplan.local",
-      "firstName": "Professor",
-      "lastName": "User",
+      "username": "ml52sch",
+      "email": "maria.schneider@tum.de",
+      "firstName": "Maria",
+      "lastName": "Schneider",
       "enabled": true,
       "emailVerified": true,
       "credentials": [
         {
           "type": "password",
-          "value": "professor",
+          "value": "schneider",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-staffplan",
+        "professor"
+      ],
+      "clientRoles": {
+        "staffplan-client": ["professor"]
+      }
+    },
+    {
+      "username": "cv38web",
+      "email": "thomas.weber@tum.de",
+      "firstName": "Thomas",
+      "lastName": "Weber",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "weber",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-staffplan",
+        "professor"
+      ],
+      "clientRoles": {
+        "staffplan-client": ["professor"]
+      }
+    },
+    {
+      "username": "db45mue",
+      "email": "anna.mueller@tum.de",
+      "firstName": "Anna",
+      "lastName": "Mueller",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "mueller",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-staffplan",
+        "professor"
+      ],
+      "clientRoles": {
+        "staffplan-client": ["professor"]
+      }
+    },
+    {
+      "username": "se29fis",
+      "email": "michael.fischer@tum.de",
+      "firstName": "Michael",
+      "lastName": "Fischer",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "fischer",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-staffplan",
+        "professor"
+      ],
+      "clientRoles": {
+        "staffplan-client": ["professor"]
+      }
+    },
+    {
+      "username": "ai61hof",
+      "email": "laura.hoffmann@tum.de",
+      "firstName": "Laura",
+      "lastName": "Hoffmann",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "hoffmann",
           "temporary": false
         }
       ],
@@ -237,7 +349,7 @@
     },
     {
       "username": "employee",
-      "email": "employee@staffplan.local",
+      "email": "employee@tum.de",
       "firstName": "Employee",
       "lastName": "User",
       "enabled": true,
@@ -259,7 +371,7 @@
     },
     {
       "username": "user",
-      "email": "user@staffplan.local",
+      "email": "user@tum.de",
       "firstName": "Test",
       "lastName": "User",
       "enabled": true,
@@ -278,5 +390,19 @@
         "staffplan-client": []
       }
     }
-  ]
+  ],
+  "scopeMappings": [
+    {
+      "clientScope": "offline_access",
+      "roles": ["offline_access"]
+    }
+  ],
+  "clientScopeMappings": {
+    "staffplan-service-client": [
+      {
+        "client": "realm-management",
+        "roles": ["view-users", "query-users"]
+      }
+    ]
+  }
 }

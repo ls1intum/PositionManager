@@ -60,6 +60,10 @@ management:
 staffplan:
   keycloak:
     client-id: staffplan-client
+    # Service client for admin operations (search users in LDAP)
+    service:
+      client-id: ${KEYCLOAK_SERVICE_CLIENT_ID:staffplan-service-client}
+      client-secret: ${KEYCLOAK_SERVICE_CLIENT_SECRET:}
   client:
     host: http://localhost:4200
   cors:

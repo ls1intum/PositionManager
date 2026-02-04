@@ -8,6 +8,9 @@ spring:
 staffplan:
   keycloak:
     client-id: ${STAFFPLAN_KEYCLOAK_CLIENT_ID:staffplan-client}
+    service:
+      client-id: ${KEYCLOAK_SERVICE_CLIENT_ID:staffplan-service-client}
+      client-secret: ${KEYCLOAK_SERVICE_CLIENT_SECRET}
   client:
     host: ${STAFFPLAN_CLIENT_HOST:https://staffplan.aet.cit.tum.de}
   cors:

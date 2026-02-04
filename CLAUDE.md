@@ -74,9 +74,21 @@ Follows standard layered architecture: Web (REST controllers) → Service → Re
 |------------|------------|-------------|-------------|
 | admin      | admin      | admin       | Full access |
 | jobmanager | jobmanager | job_manager | Can manage positions |
-| professor  | professor  | professor   | Can view positions |
+| ml52sch    | schneider  | professor   | Prof. Maria Schneider (Machine Learning) |
+| cv38web    | weber      | professor   | Prof. Thomas Weber (Computer Vision) |
+| db45mue    | mueller    | professor   | Prof. Anna Mueller (Database Systems) |
+| se29fis    | fischer    | professor   | Prof. Michael Fischer (Software Engineering) |
+| ai61hof    | hoffmann   | professor   | Prof. Laura Hoffmann (Artificial Intelligence) |
 | employee   | employee   | employee    | Can view positions |
 | user       | user       | *(none)*    | No access (test) |
+
+## Test Data
+
+Test CSV files for development are in `docker/test-data/`:
+- `research-groups-test.csv` - Research groups with professor assignments
+- `positions-test.csv` - Staff positions linked to research groups
+
+Import via admin UI at `/admin/research-groups` using "CSV Import" button.
 
 ## Configuration
 

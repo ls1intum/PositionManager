@@ -19,6 +19,7 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { FileUpload, FileUploadHandlerEvent } from 'primeng/fileupload';
+import { Tooltip } from 'primeng/tooltip';
 import { ResearchGroupService } from './research-group.service';
 import { ResearchGroup, ResearchGroupFormData } from './research-group.model';
 
@@ -50,6 +51,7 @@ const CAMPUSES = [
     ConfirmDialog,
     Toast,
     FileUpload,
+    Tooltip,
   ],
   providers: [ConfirmationService, MessageService],
   template: `
@@ -92,7 +94,7 @@ const CAMPUSES = [
         } @else {
           <p-table
             [value]="researchGroups()"
-            [tableStyle]="{ 'min-width': '80rem' }"
+            [tableStyle]="{ 'min-width': '90rem' }"
             [rowHover]="true"
             [paginator]="true"
             [rows]="20"
@@ -103,6 +105,7 @@ const CAMPUSES = [
                 <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
                 <th pSortableColumn="abbreviation">Kürzel <p-sortIcon field="abbreviation" /></th>
                 <th>Professor</th>
+                <th>Zuordnung</th>
                 <th pSortableColumn="department">Fakultät <p-sortIcon field="department" /></th>
                 <th pSortableColumn="positionCount">
                   Positionen <p-sortIcon field="positionCount" />
@@ -124,6 +127,14 @@ const CAMPUSES = [
                   @if (group.head) {
                     <span class="professor-assigned">
                       {{ group.head.firstName }} {{ group.head.lastName }}
+                      @if (!group.head.lastLoginAt) {
+                        <p-tag
+                          value="Nie angemeldet"
+                          severity="secondary"
+                          class="professor-tag"
+                          pTooltip="Benutzer wurde importiert, hat sich aber noch nie angemeldet"
+                        />
+                      }
                     </span>
                   } @else if (group.professorFirstName || group.professorLastName) {
                     <span class="professor-expected">
@@ -132,6 +143,32 @@ const CAMPUSES = [
                     </span>
                   } @else {
                     <span class="professor-none">-</span>
+                  }
+                </td>
+                <td>
+                  @if (group.professorUniversityId) {
+                    <span
+                      class="mapping-status mapped"
+                      pTooltip="Automatische Zuordnung via {{ group.professorUniversityId }}"
+                    >
+                      <i class="pi pi-check-circle"></i>
+                      {{ group.professorUniversityId }}
+                    </span>
+                  } @else if (group.needsManualMapping) {
+                    <span
+                      class="mapping-status needs-mapping"
+                      [pTooltip]="group.mappingNotes || 'Manuelle Zuordnung erforderlich'"
+                    >
+                      <i class="pi pi-exclamation-triangle"></i>
+                      Manuell
+                    </span>
+                  } @else if (group.professorEmail) {
+                    <span class="mapping-status pending" pTooltip="E-Mail: {{ group.professorEmail }}">
+                      <i class="pi pi-envelope"></i>
+                      E-Mail
+                    </span>
+                  } @else {
+                    <span class="mapping-status none">-</span>
                   }
                 </td>
                 <td>{{ group.department }}</td>
@@ -172,7 +209,7 @@ const CAMPUSES = [
             </ng-template>
             <ng-template #emptymessage>
               <tr>
-                <td colspan="8" class="empty-message">
+                <td colspan="9" class="empty-message">
                   Keine Forschungsgruppen vorhanden. Importieren Sie Daten über CSV oder erstellen
                   Sie eine neue Gruppe.
                 </td>
@@ -186,7 +223,7 @@ const CAMPUSES = [
         [header]="isEditing() ? 'Forschungsgruppe bearbeiten' : 'Forschungsgruppe erstellen'"
         [(visible)]="dialogVisible"
         [modal]="true"
-        [style]="{ width: '600px' }"
+        [style]="{ width: '650px' }"
       >
         <div class="form-grid">
           <div class="form-field">
@@ -233,6 +270,26 @@ const CAMPUSES = [
           <div class="form-field">
             <label for="professorLastName">Professor Nachname</label>
             <input pInputText id="professorLastName" [(ngModel)]="formData.professorLastName" />
+          </div>
+
+          <div class="form-field">
+            <label for="professorEmail">Professor E-Mail</label>
+            <input
+              pInputText
+              id="professorEmail"
+              [(ngModel)]="formData.professorEmail"
+              placeholder="z.B. krusche&#64;tum.de"
+            />
+          </div>
+
+          <div class="form-field">
+            <label for="professorUniversityId">Professor UniversityId</label>
+            <input
+              pInputText
+              id="professorUniversityId"
+              [(ngModel)]="formData.professorUniversityId"
+              placeholder="z.B. ne23kow"
+            />
           </div>
 
           <div class="form-field full-width">
@@ -366,6 +423,46 @@ const CAMPUSES = [
 
     .professor-none {
       color: var(--p-text-muted-color);
+    }
+
+    .mapping-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.875rem;
+      cursor: default;
+
+      i {
+        font-size: 0.875rem;
+      }
+
+      &.mapped {
+        color: var(--p-green-600);
+
+        i {
+          color: var(--p-green-500);
+        }
+      }
+
+      &.needs-mapping {
+        color: var(--p-orange-600);
+
+        i {
+          color: var(--p-orange-500);
+        }
+      }
+
+      &.pending {
+        color: var(--p-blue-600);
+
+        i {
+          color: var(--p-blue-500);
+        }
+      }
+
+      &.none {
+        color: var(--p-text-muted-color);
+      }
     }
 
     .position-count {
@@ -534,6 +631,8 @@ export class ResearchGroupsAdminComponent implements OnInit {
       department: group.department ?? '',
       professorFirstName: group.professorFirstName ?? '',
       professorLastName: group.professorLastName ?? '',
+      professorEmail: group.professorEmail ?? '',
+      professorUniversityId: group.professorUniversityId ?? '',
       aliases: group.aliases ?? [],
     };
     this.editingId.set(group.id);
@@ -561,6 +660,8 @@ export class ResearchGroupsAdminComponent implements OnInit {
       department: this.formData.department || null,
       professorFirstName: this.formData.professorFirstName || null,
       professorLastName: this.formData.professorLastName || null,
+      professorEmail: this.formData.professorEmail || null,
+      professorUniversityId: this.formData.professorUniversityId || null,
       aliases: this.formData.aliases,
     };
 
@@ -704,6 +805,8 @@ export class ResearchGroupsAdminComponent implements OnInit {
       department: '',
       professorFirstName: '',
       professorLastName: '',
+      professorEmail: '',
+      professorUniversityId: '',
       aliases: [],
     };
   }

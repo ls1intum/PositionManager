@@ -4,6 +4,7 @@ export interface UserSummary {
   firstName: string | null;
   lastName: string | null;
   email: string | null;
+  lastLoginAt: string | null;
 }
 
 export interface ResearchGroup {
@@ -16,6 +17,10 @@ export interface ResearchGroup {
   department: string | null;
   professorFirstName: string | null;
   professorLastName: string | null;
+  professorEmail: string | null;
+  professorUniversityId: string | null;
+  needsManualMapping: boolean;
+  mappingNotes: string | null;
   archived: boolean;
   head: UserSummary | null;
   aliases: string[];
@@ -33,6 +38,8 @@ export interface ResearchGroupFormData {
   department: string;
   professorFirstName: string;
   professorLastName: string;
+  professorEmail: string;
+  professorUniversityId: string;
   aliases: string[];
 }
 

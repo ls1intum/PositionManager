@@ -2,6 +2,7 @@ package de.tum.cit.aet.usermanagement.dto;
 
 import de.tum.cit.aet.usermanagement.domain.User;
 
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -13,7 +14,8 @@ public record UserSummaryDTO(
         String universityId,
         String firstName,
         String lastName,
-        String email
+        String email,
+        Instant lastLoginAt
 ) {
     /**
      * Creates a UserSummaryDTO from a User entity.
@@ -27,7 +29,15 @@ public record UserSummaryDTO(
                 user.getUniversityId(),
                 user.getFirstName(),
                 user.getLastName(),
-                user.getEmail()
+                user.getEmail(),
+                user.getLastLoginAt()
         );
+    }
+
+    /**
+     * Checks if the user has ever logged in.
+     */
+    public boolean hasLoggedIn() {
+        return lastLoginAt != null;
     }
 }
