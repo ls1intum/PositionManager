@@ -2,7 +2,10 @@ package de.tum.cit.aet.usermanagement.service;
 
 import de.tum.cit.aet.usermanagement.domain.ResearchGroup;
 import de.tum.cit.aet.usermanagement.domain.User;
+import de.tum.cit.aet.usermanagement.domain.UserGroup;
+import de.tum.cit.aet.usermanagement.domain.key.UserGroupId;
 import de.tum.cit.aet.usermanagement.repository.ResearchGroupRepository;
+import de.tum.cit.aet.usermanagement.repository.UserGroupRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,19 +17,25 @@ import java.util.Optional;
  * Service for automatically assigning professors to their research groups on login.
  * Matches are based on exact (case-insensitive) first name and last name comparison
  * between the user and the professor name fields in research groups.
+ *
+ * When a user logs in and their name matches a research group's professor name,
+ * they are automatically assigned the professor role and set as head of that group.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProfessorLoginMatchingService {
 
+    private static final String PROFESSOR_ROLE = "professor";
+
     private final ResearchGroupRepository researchGroupRepository;
+    private final UserGroupRepository userGroupRepository;
 
     /**
-     * Attempts to match a professor user to their research group and assign them as head.
-     * Only runs for users with the professor role who are not already a head of a research group.
+     * Attempts to match a user to their research group based on name and assign them as head.
+     * If a match is found, the user is automatically granted the professor role.
      *
-     * @param user the user to match (should have professor role)
+     * @param user the user to match
      */
     @Transactional
     public void matchProfessorToResearchGroup(User user) {
@@ -34,14 +43,7 @@ public class ProfessorLoginMatchingService {
             return;
         }
 
-        // Only process users with professor role
-        if (!user.hasAnyGroup("professor")) {
-            return;
-        }
-
         // Check if user is already a head of any research group
-        // This is determined by checking if any research group has this user as head
-        // The relationship is OneToOne with unique constraint
         if (isAlreadyHead(user)) {
             log.debug("User {} is already head of a research group, skipping matching", user.getUniversityId());
             return;
@@ -53,12 +55,12 @@ public class ProfessorLoginMatchingService {
             return;
         }
 
-        // Try to find matching research group
+        // Try to find matching research group by professor name
         Optional<ResearchGroup> matchingGroup = researchGroupRepository
                 .findByProfessorNameIgnoreCase(user.getFirstName(), user.getLastName());
 
         if (matchingGroup.isEmpty()) {
-            log.debug("No matching research group found for professor: {} {}",
+            log.debug("No matching research group found for user: {} {}",
                     user.getFirstName(), user.getLastName());
             return;
         }
@@ -72,18 +74,37 @@ public class ProfessorLoginMatchingService {
             return;
         }
 
+        // Assign professor role if user doesn't have it
+        if (!user.hasAnyGroup(PROFESSOR_ROLE)) {
+            assignProfessorRole(user);
+        }
+
         // Assign user as head
         group.setHead(user);
         user.setResearchGroup(group);
         researchGroupRepository.save(group);
 
-        log.info("Auto-assigned professor {} {} as head of research group '{}'",
+        log.info("Auto-assigned {} {} as head of research group '{}' with professor role",
                 user.getFirstName(), user.getLastName(), group.getName());
     }
 
+    private void assignProfessorRole(User user) {
+        UserGroupId groupId = new UserGroupId();
+        groupId.setUserId(user.getId());
+        groupId.setRole(PROFESSOR_ROLE);
+
+        UserGroup userGroup = new UserGroup();
+        userGroup.setId(groupId);
+        userGroup.setUser(user);
+
+        userGroupRepository.save(userGroup);
+        user.getGroups().add(userGroup);
+
+        log.info("Auto-assigned professor role to user {} {} based on research group match",
+                user.getFirstName(), user.getLastName());
+    }
+
     private boolean isAlreadyHead(User user) {
-        // Check all research groups to see if this user is already a head
-        return researchGroupRepository.findAllByArchivedFalseOrderByNameAsc().stream()
-                .anyMatch(rg -> rg.getHead() != null && rg.getHead().getId().equals(user.getId()));
+        return researchGroupRepository.existsByHeadId(user.getId());
     }
 }

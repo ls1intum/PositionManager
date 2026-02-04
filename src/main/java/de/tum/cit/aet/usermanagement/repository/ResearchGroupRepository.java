@@ -42,4 +42,6 @@ public interface ResearchGroupRepository extends JpaRepository<ResearchGroup, UU
     boolean existsByName(String name);
 
     boolean existsByAbbreviation(String abbreviation);
+
+    boolean existsByHeadId(UUID headId);
 }
