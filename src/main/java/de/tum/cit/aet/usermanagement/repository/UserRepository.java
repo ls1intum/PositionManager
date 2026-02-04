@@ -45,4 +45,16 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT DISTINCT u FROM User u LEFT JOIN UserGroup g ON (u.id = g.id.userId) WHERE g.id.role IN :roles AND (:researchGroupId IS NULL OR u.researchGroup.id = :researchGroupId)")
     List<User> getRoleMembers(@Param("roles") Set<String> roles,
                               @Param("researchGroupId") UUID researchGroupId);
+
+    @Query("""
+            SELECT DISTINCT u FROM User u
+            LEFT JOIN u.groups g
+            WHERE (:search IS NULL OR :search = ''
+                   OR LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(u.universityId) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:role IS NULL OR :role = '' OR g.id.role = :role)
+            """)
+    Page<User> searchUsersAdmin(@Param("search") String search, @Param("role") String role, Pageable pageable);
 }

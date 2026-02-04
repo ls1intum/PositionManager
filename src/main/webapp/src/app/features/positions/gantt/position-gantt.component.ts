@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   effect,
+  inject,
   input,
   output,
   signal,
@@ -18,6 +19,7 @@ import { Button } from 'primeng/button';
 import { Slider } from 'primeng/slider';
 import { DatePicker } from 'primeng/datepicker';
 import { Position, EmployeeAssignment, GroupedPosition, TimeSlice } from '../position.model';
+import { SecurityStore } from '../../../core/security';
 
 interface BandSegment {
   startPercent: number;
@@ -693,6 +695,8 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PositionGanttComponent {
+  private readonly securityStore = inject(SecurityStore);
+
   readonly positions = input<Position[]>([]);
   readonly canManage = input<boolean>(false);
   readonly clearData = output<void>();
@@ -714,7 +718,10 @@ export class PositionGanttComponent {
   readonly filterRelevanceType = signal<string | null>(null);
   readonly filterDepartment = signal<string | null>(null);
   readonly filterQualification = signal<string | null>(null);
-  readonly showOnlyUnfilled = signal(true);
+  // Only activate "unfilled positions" filter by default for admins and job managers
+  readonly showOnlyUnfilled = signal(
+    this.securityStore.isAdmin() || this.securityStore.isJobManager(),
+  );
   readonly filterDate = signal<Date>(new Date());
 
   // Zoom signal (months to display)

@@ -1,11 +1,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   inject,
   OnInit,
   signal,
   computed,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { Button } from 'primeng/button';
@@ -19,6 +22,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { FileUpload, FileUploadHandlerEvent } from 'primeng/fileupload';
 import { Tooltip } from 'primeng/tooltip';
+import { IconField } from 'primeng/iconfield';
+import { InputIcon } from 'primeng/inputicon';
 import { ResearchGroupService } from './research-group.service';
 import { ResearchGroup, ResearchGroupFormData } from './research-group.model';
 
@@ -50,12 +55,26 @@ const CAMPUSES = [
     Toast,
     FileUpload,
     Tooltip,
+    IconField,
+    InputIcon,
   ],
   providers: [ConfirmationService, MessageService],
   template: `
     <div class="research-groups-page">
       <div class="page-header">
-        <h2>Forschungsgruppen</h2>
+        <div class="header-left">
+          <h2>Forschungsgruppen</h2>
+          <p-iconfield class="search-field">
+            <p-inputicon styleClass="pi pi-search" />
+            <input
+              pInputText
+              type="text"
+              placeholder="Suchen..."
+              [ngModel]="searchTerm()"
+              (ngModelChange)="onSearchChange($event)"
+            />
+          </p-iconfield>
+        </div>
         <div class="actions">
           <p-fileupload
             mode="basic"
@@ -104,7 +123,7 @@ const CAMPUSES = [
                 <th pSortableColumn="abbreviation">Kürzel <p-sortIcon field="abbreviation" /></th>
                 <th>Professor</th>
                 <th>Zuordnung</th>
-                <th pSortableColumn="department">Fakultät <p-sortIcon field="department" /></th>
+                <th pSortableColumn="department">Department <p-sortIcon field="department" /></th>
                 <th pSortableColumn="positionCount">
                   Positionen <p-sortIcon field="positionCount" />
                 </th>
@@ -161,7 +180,10 @@ const CAMPUSES = [
                       Manuell
                     </span>
                   } @else if (group.professorEmail) {
-                    <span class="mapping-status pending" pTooltip="E-Mail: {{ group.professorEmail }}">
+                    <span
+                      class="mapping-status pending"
+                      pTooltip="E-Mail: {{ group.professorEmail }}"
+                    >
                       <i class="pi pi-envelope"></i>
                       E-Mail
                     </span>
@@ -246,14 +268,14 @@ const CAMPUSES = [
           </div>
 
           <div class="form-field">
-            <label for="department">Fakultät</label>
+            <label for="department">Department</label>
             <p-select
               id="department"
               [(ngModel)]="formData.department"
               [options]="departments"
               optionLabel="label"
               optionValue="value"
-              placeholder="Fakultät auswählen"
+              placeholder="Department auswählen"
               [showClear]="true"
             />
           </div>
@@ -405,6 +427,19 @@ const CAMPUSES = [
 
       h2 {
         margin: 0;
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .search-field {
+        input {
+          width: 250px;
+        }
       }
 
       .actions {
@@ -602,6 +637,9 @@ export class ResearchGroupsAdminComponent implements OnInit {
   private readonly researchGroupService = inject(ResearchGroupService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  private readonly searchSubject = new Subject<string>();
 
   readonly researchGroups = signal<ResearchGroup[]>([]);
   readonly loading = signal(false);
@@ -617,6 +655,7 @@ export class ResearchGroupsAdminComponent implements OnInit {
     errors: string[];
     warnings: string[];
   } | null>(null);
+  readonly searchTerm = signal('');
 
   readonly isEditing = computed(() => this.editingId() !== null);
   readonly departments = DEPARTMENTS;
@@ -625,12 +664,25 @@ export class ResearchGroupsAdminComponent implements OnInit {
   formData: ResearchGroupFormData = this.getEmptyFormData();
 
   ngOnInit(): void {
+    // Set up debounced search
+    this.searchSubject
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
+      .subscribe((term) => {
+        this.searchTerm.set(term);
+        this.loadResearchGroups();
+      });
+
     this.loadResearchGroups();
+  }
+
+  onSearchChange(term: string): void {
+    this.searchSubject.next(term);
   }
 
   loadResearchGroups(): void {
     this.loading.set(true);
-    this.researchGroupService.getAll().subscribe({
+    const search = this.searchTerm();
+    this.researchGroupService.getAll(search || undefined).subscribe({
       next: (groups) => {
         this.researchGroups.set(groups);
         this.loading.set(false);

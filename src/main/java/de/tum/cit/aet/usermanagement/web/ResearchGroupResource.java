@@ -27,17 +27,22 @@ public class ResearchGroupResource {
     private final CurrentUserProvider currentUserProvider;
 
     /**
-     * Returns all research groups.
+     * Returns all research groups, optionally filtered by search term.
      * Admin only.
      *
+     * @param search optional search term to filter by name, abbreviation, professor name, or department
      * @return list of research groups
      */
     @GetMapping
-    public ResponseEntity<List<ResearchGroupDTO>> getResearchGroups() {
+    public ResponseEntity<List<ResearchGroupDTO>> getResearchGroups(
+            @RequestParam(required = false) String search) {
         if (!currentUserProvider.isAdmin()) {
             return ResponseEntity.status(403).build();
         }
 
+        if (search != null && !search.isBlank()) {
+            return ResponseEntity.ok(researchGroupService.searchResearchGroups(search.trim()));
+        }
         return ResponseEntity.ok(researchGroupService.getAllResearchGroups());
     }
 

@@ -4,6 +4,9 @@ import de.tum.cit.aet.core.security.CurrentUserProvider;
 import de.tum.cit.aet.usermanagement.dto.UserDTO;
 import de.tum.cit.aet.usermanagement.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,16 +32,25 @@ public class UserResource {
     }
 
     /**
-     * Returns all users. Admin only.
+     * Returns all users with pagination and optional filters. Admin only.
      *
-     * @return list of all users
+     * @param page page number (0-indexed)
+     * @param size page size
+     * @param search optional search term
+     * @param role optional role filter
+     * @return paginated list of users
      */
     @GetMapping
-    public ResponseEntity<List<UserDTO>> getAllUsers() {
+    public ResponseEntity<Page<UserDTO>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String role) {
         if (!currentUserProvider.isAdmin()) {
             return ResponseEntity.status(403).build();
         }
-        return ResponseEntity.ok(userService.getAllUsers());
+        PageRequest pageable = PageRequest.of(page, size, Sort.by("lastName", "firstName"));
+        return ResponseEntity.ok(userService.searchUsers(search, role, pageable));
     }
 
     /**

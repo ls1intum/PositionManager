@@ -40,6 +40,27 @@ public interface ResearchGroupRepository extends JpaRepository<ResearchGroup, UU
     List<ResearchGroup> findAllWithAliasesNotArchived();
 
     @Query("""
+            SELECT DISTINCT rg FROM ResearchGroup rg
+            LEFT JOIN FETCH rg.aliases
+            LEFT JOIN rg.head h
+            WHERE rg.archived = false
+              AND (:search IS NULL OR :search = ''
+                   OR LOWER(rg.name) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(rg.abbreviation) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(rg.professorFirstName) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(rg.professorLastName) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(rg.professorEmail) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(rg.professorUniversityId) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(rg.department) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(h.firstName) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(h.lastName) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(h.email) LIKE LOWER(CONCAT('%', :search, '%'))
+                   OR LOWER(h.universityId) LIKE LOWER(CONCAT('%', :search, '%')))
+            ORDER BY rg.name
+            """)
+    List<ResearchGroup> searchWithAliases(@Param("search") String search);
+
+    @Query("""
             SELECT COUNT(p) FROM Position p
             WHERE p.researchGroup.id = :researchGroupId
             """)

@@ -8,6 +8,8 @@ import de.tum.cit.aet.usermanagement.dto.UserDTO;
 import de.tum.cit.aet.usermanagement.repository.UserGroupRepository;
 import de.tum.cit.aet.usermanagement.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,20 @@ public class UserService {
         return userRepository.findAll().stream()
                 .map(UserDTO::fromEntity)
                 .toList();
+    }
+
+    /**
+     * Searches users with pagination and optional filters.
+     *
+     * @param search optional search term for name, email, or university ID
+     * @param role optional role filter
+     * @param pageable pagination parameters
+     * @return page of matching users
+     */
+    @Transactional(readOnly = true)
+    public Page<UserDTO> searchUsers(String search, String role, Pageable pageable) {
+        return userRepository.searchUsersAdmin(search, role, pageable)
+                .map(UserDTO::fromEntity);
     }
 
     /**

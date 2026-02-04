@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -13,6 +13,21 @@ export interface UserDTO {
   lastLoginAt: string | null;
 }
 
+export interface PagedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
+export interface UserSearchParams {
+  page?: number;
+  size?: number;
+  search?: string;
+  role?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly http = inject(HttpClient);
@@ -22,8 +37,19 @@ export class UserService {
     return this.http.get<UserDTO>(`${this.apiUrl}/me`);
   }
 
-  getAllUsers(): Observable<UserDTO[]> {
-    return this.http.get<UserDTO[]>(this.apiUrl);
+  getAllUsers(params: UserSearchParams = {}): Observable<PagedResponse<UserDTO>> {
+    let httpParams = new HttpParams()
+      .set('page', (params.page ?? 0).toString())
+      .set('size', (params.size ?? 20).toString());
+
+    if (params.search) {
+      httpParams = httpParams.set('search', params.search);
+    }
+    if (params.role) {
+      httpParams = httpParams.set('role', params.role);
+    }
+
+    return this.http.get<PagedResponse<UserDTO>>(this.apiUrl, { params: httpParams });
   }
 
   updateUserRoles(userId: string, roles: string[]): Observable<UserDTO> {

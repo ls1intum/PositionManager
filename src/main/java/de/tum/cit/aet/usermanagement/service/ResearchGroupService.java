@@ -56,6 +56,20 @@ public class ResearchGroupService {
     }
 
     /**
+     * Searches research groups by name, abbreviation, professor name, or department.
+     *
+     * @param search the search term (can be null or empty for all results)
+     * @return list of matching research group DTOs
+     */
+    @Transactional(readOnly = true)
+    public List<ResearchGroupDTO> searchResearchGroups(String search) {
+        return researchGroupRepository.searchWithAliases(search)
+                .stream()
+                .map(rg -> ResearchGroupDTO.fromEntity(rg, researchGroupRepository.countPositionsByResearchGroupId(rg.getId())))
+                .toList();
+    }
+
+    /**
      * Returns a research group by ID.
      *
      * @param id the research group ID

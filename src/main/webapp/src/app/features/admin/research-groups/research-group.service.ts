@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
@@ -15,8 +15,12 @@ export class ResearchGroupService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/v2/research-groups`;
 
-  getAll(): Observable<ResearchGroup[]> {
-    return this.http.get<ResearchGroup[]>(this.apiUrl);
+  getAll(search?: string): Observable<ResearchGroup[]> {
+    let params = new HttpParams();
+    if (search) {
+      params = params.set('search', search);
+    }
+    return this.http.get<ResearchGroup[]>(this.apiUrl, { params });
   }
 
   getById(id: string): Observable<ResearchGroup> {

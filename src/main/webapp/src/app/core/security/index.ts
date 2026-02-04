@@ -6,4 +6,4 @@ export { AdminGuard, adminGuard } from './admin.guard';
 export { JobManagerGuard, jobManagerGuard } from './job-manager.guard';
 export { authInterceptor } from './auth.interceptor';
 export { UserService } from './user.service';
-export type { UserDTO } from './user.service';
+export type { UserDTO, PagedResponse, UserSearchParams } from './user.service';
