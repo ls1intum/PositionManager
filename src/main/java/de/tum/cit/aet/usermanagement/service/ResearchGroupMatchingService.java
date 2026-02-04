@@ -38,7 +38,10 @@ public class ResearchGroupMatchingService {
     );
 
     // Pattern to extract abbreviations like (I12), (DSS), (CIT)
-    private static final Pattern ABBREVIATION_PATTERN = Pattern.compile("\\(([A-Z0-9]+)\\)");
+    private static final Pattern ABBREVIATION_PATTERN = Pattern.compile("\\(([A-Z0-9-]+)\\)");
+
+    // Pattern to remove any parenthetical content (e.g., "(Prof. Schneider)")
+    private static final Pattern PARENTHETICAL_PATTERN = Pattern.compile("\\s*\\([^)]+\\)");
 
     // Prefixes to strip from organization unit names
     private static final List<String> STRIP_PREFIXES = List.of(
@@ -234,15 +237,15 @@ public class ResearchGroupMatchingService {
     private NormalizedOrgUnit normalizeOrgUnit(String orgUnit) {
         String input = orgUnit.trim();
 
-        // Extract abbreviation in parentheses
+        // Extract abbreviation in parentheses (uppercase only, like I-ML, CIT, I12)
         String abbreviation = null;
         Matcher matcher = ABBREVIATION_PATTERN.matcher(input);
         if (matcher.find()) {
             abbreviation = matcher.group(1);
         }
 
-        // Remove the abbreviation part for name matching
-        String name = ABBREVIATION_PATTERN.matcher(input).replaceAll("").trim();
+        // Remove ALL parenthetical content (including professor names like "(Prof. Schneider)")
+        String name = PARENTHETICAL_PATTERN.matcher(input).replaceAll("").trim();
 
         // Strip common prefixes
         String normalized = name;
