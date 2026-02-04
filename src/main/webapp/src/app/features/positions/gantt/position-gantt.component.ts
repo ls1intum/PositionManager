@@ -1031,6 +1031,7 @@ export class PositionGanttComponent {
   }
 
   // Calculate time slices for a position
+  // Only shows slices within the position's actual date range (not the full visible timeline)
   private calculateTimeSlices(
     group: GroupedPosition,
     range: { start: Date; end: Date },
@@ -1038,24 +1039,30 @@ export class PositionGanttComponent {
     const assignments = group.assignments;
 
     if (assignments.length === 0) {
-      return [
-        {
-          start: range.start,
-          end: range.end,
-          totalFillPercentage: 0,
-          assignments: [],
-        },
-      ];
+      // No assignments means nothing to show
+      return [];
+    }
+
+    // Calculate the effective range: intersection of visible range and position's date range
+    const positionStart = group.dateRange.start;
+    const positionEnd = group.dateRange.end;
+
+    const effectiveStart = new Date(Math.max(range.start.getTime(), positionStart.getTime()));
+    const effectiveEnd = new Date(Math.min(range.end.getTime(), positionEnd.getTime()));
+
+    // If position is completely outside visible range, return empty
+    if (effectiveStart > effectiveEnd) {
+      return [];
     }
 
     const boundaries = new Set<number>();
-    boundaries.add(range.start.getTime());
-    boundaries.add(range.end.getTime());
+    boundaries.add(effectiveStart.getTime());
+    boundaries.add(effectiveEnd.getTime());
 
     for (const a of assignments) {
-      const start = Math.max(a.startDate.getTime(), range.start.getTime());
-      const end = Math.min(a.endDate.getTime(), range.end.getTime());
-      if (start <= range.end.getTime() && end >= range.start.getTime()) {
+      const start = Math.max(a.startDate.getTime(), effectiveStart.getTime());
+      const end = Math.min(a.endDate.getTime(), effectiveEnd.getTime());
+      if (start <= effectiveEnd.getTime() && end >= effectiveStart.getTime()) {
         boundaries.add(start);
         boundaries.add(end);
       }
