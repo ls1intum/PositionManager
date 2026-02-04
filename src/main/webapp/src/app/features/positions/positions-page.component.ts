@@ -7,6 +7,9 @@ import {
   signal,
 } from '@angular/core';
 import { Button } from 'primeng/button';
+import { ConfirmDialog } from 'primeng/confirmdialog';
+import { Toast } from 'primeng/toast';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { SecurityStore } from '../../core/security';
 import { PositionService } from './position.service';
 import { PositionUploadComponent } from './upload/position-upload.component';
@@ -15,7 +18,8 @@ import { Position } from './position.model';
 
 @Component({
   selector: 'app-positions-page',
-  imports: [Button, PositionUploadComponent, PositionGanttComponent],
+  imports: [Button, ConfirmDialog, Toast, PositionUploadComponent, PositionGanttComponent],
+  providers: [ConfirmationService, MessageService],
   template: `
     <div class="positions-page">
       @if (isProfessorView()) {
@@ -47,6 +51,9 @@ import { Position } from './position.model';
           </div>
         </app-position-gantt>
       }
+
+      <p-confirmDialog />
+      <p-toast />
     </div>
   `,
   styles: `
@@ -109,6 +116,8 @@ import { Position } from './position.model';
 export class PositionsPageComponent implements OnInit {
   private readonly positionService = inject(PositionService);
   private readonly securityStore = inject(SecurityStore);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly messageService = inject(MessageService);
 
   readonly positions = signal<Position[]>([]);
   readonly loading = signal(false);
@@ -140,16 +149,35 @@ export class PositionsPageComponent implements OnInit {
   }
 
   clearPositions(): void {
-    if (!confirm('Möchten Sie wirklich alle Daten löschen?')) {
-      return;
-    }
+    this.confirmationService.confirm({
+      message:
+        'Möchten Sie wirklich ALLE Positionen löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
+      header: 'Alle Daten löschen',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Ja, alle löschen',
+      rejectLabel: 'Abbrechen',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => this.deleteAllPositions(),
+    });
+  }
+
+  private deleteAllPositions(): void {
     this.positionService.deletePositions().subscribe({
       next: () => {
         this.positions.set([]);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Erfolg',
+          detail: 'Alle Positionen wurden gelöscht',
+        });
       },
       error: (err) => {
         console.error('Failed to delete positions:', err);
-        alert('Fehler beim Löschen der Daten. Bitte versuchen Sie es erneut.');
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Fehler',
+          detail: 'Positionen konnten nicht gelöscht werden',
+        });
       },
     });
   }
