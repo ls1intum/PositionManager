@@ -26,6 +26,7 @@ public class PositionResource {
     /**
      * Returns all positions, optionally filtered by research group.
      * Requires one of the roles: admin, job_manager, professor, or employee.
+     * Professors and employees only see positions from their own research group.
      *
      * @param researchGroupId optional research group ID to filter by
      * @return list of positions
@@ -39,10 +40,19 @@ public class PositionResource {
         }
 
         List<PositionDTO> positions;
-        if (researchGroupId != null) {
+
+        // Professors and employees can only see their own research group's positions
+        if ((currentUserProvider.isProfessor() || currentUserProvider.isEmployee())
+                && !currentUserProvider.isAdmin() && !currentUserProvider.isJobManager()) {
+            var userResearchGroup = currentUserProvider.getUser().getResearchGroup();
+            if (userResearchGroup == null) {
+                // User has no research group assigned, return empty list
+                return ResponseEntity.ok(List.of());
+            }
+            positions = positionService.getPositionsByResearchGroup(userResearchGroup.getId());
+        } else if (researchGroupId != null) {
             positions = positionService.getPositionsByResearchGroup(researchGroupId);
         } else {
-            // For now, return all positions (research group filtering can be added later)
             positions = positionService.getAllPositions();
         }
 

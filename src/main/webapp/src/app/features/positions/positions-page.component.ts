@@ -18,6 +18,12 @@ import { Position } from './position.model';
   imports: [Button, PositionUploadComponent, PositionGanttComponent],
   template: `
     <div class="positions-page">
+      @if (isProfessorView()) {
+        <div class="professor-context">
+          <span class="context-icon">👨‍🔬</span>
+          <span>Ansicht für Ihre Forschungsgruppe</span>
+        </div>
+      }
       @if (loading()) {
         <div class="loading">Positionen werden geladen...</div>
       } @else {
@@ -71,6 +77,23 @@ import { Position } from './position.model';
       color: var(--p-text-muted-color);
     }
 
+    .professor-context {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background-color: var(--p-blue-50);
+      border-left: 4px solid var(--p-blue-500);
+      margin: 0.5rem 1rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      color: var(--p-blue-700);
+
+      .context-icon {
+        font-size: 1rem;
+      }
+    }
+
     :host ::ng-deep .compact-btn {
       font-size: 0.65rem !important;
       padding: 0.25rem 0.5rem !important;
@@ -91,6 +114,12 @@ export class PositionsPageComponent implements OnInit {
   readonly loading = signal(false);
   readonly canManage = computed(
     () => this.securityStore.isJobManager() || this.securityStore.isAdmin(),
+  );
+  readonly isProfessorView = computed(
+    () =>
+      (this.securityStore.isProfessor() || this.securityStore.isEmployee()) &&
+      !this.securityStore.isAdmin() &&
+      !this.securityStore.isJobManager(),
   );
 
   ngOnInit(): void {

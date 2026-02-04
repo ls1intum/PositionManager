@@ -9,6 +9,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -42,6 +44,18 @@ public class ResearchGroup {
 
   @Column(name = "campus")
   private String campus;
+
+  @Column(name = "professor_first_name", length = 100)
+  private String professorFirstName;
+
+  @Column(name = "professor_last_name", length = 100)
+  private String professorLastName;
+
+  @Column(name = "department", length = 100)
+  private String department;
+
+  @OneToMany(mappedBy = "researchGroup", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<ResearchGroupAlias> aliases = new ArrayList<>();
 
   @CreationTimestamp
   @Column(name = "created_at", nullable = false, updatable = false)

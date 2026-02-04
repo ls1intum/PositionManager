@@ -13,10 +13,12 @@ import java.util.Map;
 @Service
 public class AuthenticationService {
     private final UserRepository userRepository;
+    private final ProfessorLoginMatchingService professorLoginMatchingService;
 
     @Autowired
-    public AuthenticationService(UserRepository userRepository) {
+    public AuthenticationService(UserRepository userRepository, ProfessorLoginMatchingService professorLoginMatchingService) {
         this.userRepository = userRepository;
+        this.professorLoginMatchingService = professorLoginMatchingService;
     }
 
     /**
@@ -85,7 +87,12 @@ public class AuthenticationService {
             user.setLastName(lastName);
         }
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // Try to match professor to their research group
+        professorLoginMatchingService.matchProfessorToResearchGroup(savedUser);
+
+        return savedUser;
     }
 
     private String getUniversityId(JwtAuthenticationToken jwt) {

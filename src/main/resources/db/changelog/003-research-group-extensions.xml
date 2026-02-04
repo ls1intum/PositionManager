@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+                   objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <!-- Add professor name fields to research_groups for login matching -->
+    <changeSet id="003-1" author="krusche">
+        <addColumn tableName="research_groups">
+            <column name="professor_first_name" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="professor_last_name" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="department" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- Create research_group_aliases table for fuzzy matching patterns -->
+    <changeSet id="003-2" author="krusche">
+        <createTable tableName="research_group_aliases">
+            <column name="alias_id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_research_group_aliases"/>
+            </column>
+            <column name="research_group_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="alias_pattern" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="match_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Foreign key for aliases to research_groups -->
+    <changeSet id="003-3" author="krusche">
+        <addForeignKeyConstraint baseTableName="research_group_aliases" baseColumnNames="research_group_id"
+                                 referencedTableName="research_groups" referencedColumnNames="research_group_id"
+                                 constraintName="fk_aliases_research_group"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- Index for faster alias lookups -->
+    <changeSet id="003-4" author="krusche">
+        <createIndex tableName="research_group_aliases" indexName="idx_aliases_research_group">
+            <column name="research_group_id"/>
+        </createIndex>
+        <createIndex tableName="research_group_aliases" indexName="idx_aliases_pattern">
+            <column name="alias_pattern"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Index for professor name matching -->
+    <changeSet id="003-5" author="krusche">
+        <createIndex tableName="research_groups" indexName="idx_research_groups_professor_name">
+            <column name="professor_last_name"/>
+            <column name="professor_first_name"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

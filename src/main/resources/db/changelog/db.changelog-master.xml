@@ -7,5 +7,6 @@
 
     <include file="db/changelog/001-changelog.xml"/>
     <include file="db/changelog/002-grade-values.xml"/>
+    <include file="db/changelog/003-research-group-extensions.xml"/>
 
 </databaseChangeLog>

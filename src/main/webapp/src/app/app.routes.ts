@@ -36,6 +36,14 @@ export const routes: Routes = [
     canActivate: [adminGuard],
   },
   {
+    path: 'admin/research-groups',
+    loadComponent: () =>
+      import('./features/admin/research-groups/research-groups-admin.component').then(
+        (m) => m.ResearchGroupsAdminComponent,
+      ),
+    canActivate: [adminGuard],
+  },
+  {
     path: 'impressum',
     loadComponent: () =>
       import('./features/legal/impressum.component').then((m) => m.ImpressumComponent),

@@ -229,8 +229,9 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
                 <div>
                   <h4>Keine einzelne Stelle verfügbar</h4>
                   <p>
-                    Es wurde keine einzelne Stelle gefunden, die {{ searchResult()!.fillPercentage }}%
-                    aufnehmen kann. Folgende Aufteilungen auf mehrere Stellen sind möglich:
+                    Es wurde keine einzelne Stelle gefunden, die
+                    {{ searchResult()!.fillPercentage }}% aufnehmen kann. Folgende Aufteilungen auf
+                    mehrere Stellen sind möglich:
                   </p>
                 </div>
               </div>
@@ -282,7 +283,8 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
               <i class="pi pi-inbox"></i>
               <p>Keine passenden Stellen für die angegebenen Kriterien gefunden.</p>
               <p class="hint">
-                Versuchen Sie, die Besoldungsgruppe, den Besetzungsgrad oder den Zeitraum anzupassen.
+                Versuchen Sie, die Besoldungsgruppe, den Besetzungsgrad oder den Zeitraum
+                anzupassen.
               </p>
             </div>
           }
