@@ -243,10 +243,21 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
                       [severity]="suggestion.splitCount === 2 ? 'success' : 'warn'"
                     />
                     <span class="split-total">
-                      Gesamt: {{ suggestion.totalAvailablePercentage | number: '1.0-0' }}% verfügbar
+                      Gesamt: {{ suggestion.totalAvailablePercentage | number: '1.0-0' }}%
+                      @if (suggestion.totalAvailablePercentage > searchResult()!.fillPercentage) {
+                        <span class="split-excess">
+                          (+{{
+                            suggestion.totalAvailablePercentage - searchResult()!.fillPercentage
+                              | number: '1.0-0'
+                          }}% Überschuss)
+                        </span>
+                      } @else {
+                        <span class="split-perfect">✓ Perfekte Übereinstimmung</span>
+                      }
                     </span>
                     <span class="split-waste">
-                      Verlust: {{ suggestion.totalWasteAmount | currency: 'EUR' : 'symbol' : '1.0-0' }}
+                      Budgetverlust:
+                      {{ suggestion.totalWasteAmount | currency: 'EUR' : 'symbol' : '1.0-0' }}
                     </span>
                   </div>
                   <div class="split-positions">
@@ -515,6 +526,20 @@ import { GradeValue } from '../admin/grade-values/grade-value.model';
       .split-total {
         font-weight: 500;
         color: var(--p-text-color);
+      }
+
+      .split-excess {
+        color: var(--p-orange-600);
+        font-weight: normal;
+        font-size: 0.8rem;
+        margin-left: 0.25rem;
+      }
+
+      .split-perfect {
+        color: var(--p-green-600);
+        font-weight: 500;
+        font-size: 0.8rem;
+        margin-left: 0.25rem;
       }
 
       .split-waste {

@@ -335,31 +335,26 @@ public class PositionFinderService {
             partialMatches.add(match);
         }
 
-        // Sort by available percentage descending to prefer larger chunks
-        partialMatches.sort((a, b) -> b.availablePercentage().compareTo(a.availablePercentage()));
-
         List<SplitSuggestionDTO> suggestions = new ArrayList<>();
         BigDecimal targetPercentage = BigDecimal.valueOf(fillPercentage);
 
-        // Generate combinations using greedy approach
-        // Try to find combinations with 2 positions first, then 3, etc.
+        // Find optimal combinations for each split size (2, 3, 4 positions)
         for (int splitSize = 2; splitSize <= Math.min(4, partialMatches.size()); splitSize++) {
-            List<SplitSuggestionDTO> combinationsOfSize = findCombinations(
-                    partialMatches, targetPercentage, splitSize, 0, new ArrayList<>()
-            );
-            suggestions.addAll(combinationsOfSize);
-
-            // Limit total suggestions
-            if (suggestions.size() >= 5) {
-                break;
+            SplitSuggestionDTO best = findBestCombination(partialMatches, targetPercentage, splitSize);
+            if (best != null) {
+                suggestions.add(best);
             }
         }
 
-        // Sort suggestions by split count (prefer fewer splits), then by total waste
+        // Sort suggestions by excess percentage (prefer minimal over-allocation), then by split count
         suggestions.sort((a, b) -> {
-            int countCompare = Integer.compare(a.splitCount(), b.splitCount());
-            if (countCompare != 0) return countCompare;
-            return a.totalWasteAmount().compareTo(b.totalWasteAmount());
+            // Calculate excess (how much over the target)
+            BigDecimal excessA = a.totalAvailablePercentage().subtract(targetPercentage);
+            BigDecimal excessB = b.totalAvailablePercentage().subtract(targetPercentage);
+            int excessCompare = excessA.compareTo(excessB);
+            if (excessCompare != 0) return excessCompare;
+            // If same excess, prefer fewer splits
+            return Integer.compare(a.splitCount(), b.splitCount());
         });
 
         // Return top 5 suggestions
@@ -367,35 +362,90 @@ public class PositionFinderService {
     }
 
     /**
-     * Recursively finds combinations of positions that sum to at least the target percentage.
+     * Finds the best combination of exactly n positions that meets the target percentage
+     * with minimal excess (over-allocation).
      */
-    private List<SplitSuggestionDTO> findCombinations(
+    private SplitSuggestionDTO findBestCombination(
             List<PositionMatchDTO> positions,
             BigDecimal targetPercentage,
-            int targetSize,
-            int startIndex,
-            List<PositionMatchDTO> current
+            int n
     ) {
-        List<SplitSuggestionDTO> results = new ArrayList<>();
+        if (positions.size() < n) {
+            return null;
+        }
 
-        if (current.size() == targetSize) {
-            BigDecimal totalAvailable = current.stream()
+        SplitSuggestionDTO bestSuggestion = null;
+        BigDecimal bestExcess = null;
+
+        // Generate all combinations of size n
+        List<List<PositionMatchDTO>> combinations = generateCombinations(positions, n);
+
+        for (List<PositionMatchDTO> combo : combinations) {
+            BigDecimal totalAvailable = combo.stream()
                     .map(PositionMatchDTO::availablePercentage)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            if (totalAvailable.compareTo(targetPercentage) >= 0) {
-                results.add(SplitSuggestionDTO.fromMatches(new ArrayList<>(current)));
+            // Must meet the target
+            if (totalAvailable.compareTo(targetPercentage) < 0) {
+                continue;
             }
-            return results;
+
+            BigDecimal excess = totalAvailable.subtract(targetPercentage);
+
+            // Keep the combination with minimal excess
+            if (bestExcess == null || excess.compareTo(bestExcess) < 0) {
+                bestExcess = excess;
+                bestSuggestion = SplitSuggestionDTO.fromMatches(new ArrayList<>(combo));
+            }
+
+            // Perfect match found, no need to continue
+            if (excess.compareTo(BigDecimal.ZERO) == 0) {
+                break;
+            }
         }
 
-        for (int i = startIndex; i < positions.size() && results.size() < 3; i++) {
+        return bestSuggestion;
+    }
+
+    /**
+     * Generates all combinations of size k from the given list.
+     * Limited to first 100 positions to avoid combinatorial explosion.
+     */
+    private List<List<PositionMatchDTO>> generateCombinations(List<PositionMatchDTO> positions, int k) {
+        List<List<PositionMatchDTO>> result = new ArrayList<>();
+        // Limit input size to prevent combinatorial explosion
+        List<PositionMatchDTO> limited = positions.size() > 100 ? positions.subList(0, 100) : positions;
+        generateCombinationsHelper(limited, k, 0, new ArrayList<>(), result);
+        return result;
+    }
+
+    private void generateCombinationsHelper(
+            List<PositionMatchDTO> positions,
+            int k,
+            int start,
+            List<PositionMatchDTO> current,
+            List<List<PositionMatchDTO>> result
+    ) {
+        if (current.size() == k) {
+            result.add(new ArrayList<>(current));
+            return;
+        }
+
+        // Early termination if we can't possibly fill the remaining slots
+        if (start >= positions.size() || positions.size() - start < k - current.size()) {
+            return;
+        }
+
+        // Limit total combinations to prevent performance issues
+        if (result.size() >= 10000) {
+            return;
+        }
+
+        for (int i = start; i < positions.size(); i++) {
             current.add(positions.get(i));
-            results.addAll(findCombinations(positions, targetPercentage, targetSize, i + 1, current));
+            generateCombinationsHelper(positions, k, i + 1, current, result);
             current.remove(current.size() - 1);
         }
-
-        return results;
     }
 
     /**
