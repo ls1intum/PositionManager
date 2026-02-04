@@ -48,4 +48,8 @@ export class ResearchGroupService {
   batchAssignPositions(): Observable<BatchAssignResult> {
     return this.http.post<BatchAssignResult>(`${this.apiUrl}/batch-assign-positions`, {});
   }
+
+  deleteAll(): Observable<{ deleted: number }> {
+    return this.http.delete<{ deleted: number }>(this.apiUrl);
+  }
 }

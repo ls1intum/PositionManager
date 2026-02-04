@@ -21,6 +21,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -365,6 +366,11 @@ public class ResearchGroupService {
                         newUser.setFirstName(group.getProfessorFirstName());
                         newUser.setLastName(group.getProfessorLastName());
                         newUser.setEmail(group.getProfessorEmail());
+                        // Initialize timestamps to satisfy @NotNull validation
+                        // (Hibernate's @CreationTimestamp/@UpdateTimestamp run after validation)
+                        Instant now = Instant.now();
+                        newUser.setJoinedAt(now);
+                        newUser.setUpdatedAt(now);
                         return userRepository.save(newUser);
                     });
 
@@ -526,5 +532,31 @@ public class ResearchGroupService {
                 entity.getAliases().add(aliasEntity);
             }
         }
+    }
+
+    /**
+     * Deletes all research groups and their associated data.
+     * This is a destructive operation intended for administrative cleanup.
+     *
+     * @return the number of research groups deleted
+     */
+    @Transactional
+    public int deleteAll() {
+        // First, unlink all users from research groups
+        List<ResearchGroup> allGroups = researchGroupRepository.findAll();
+        for (ResearchGroup group : allGroups) {
+            if (group.getHead() != null) {
+                User head = group.getHead();
+                head.setResearchGroup(null);
+                group.setHead(null);
+                userRepository.save(head);
+            }
+        }
+
+        // Delete all research groups (cascades to aliases)
+        int count = allGroups.size();
+        researchGroupRepository.deleteAll();
+        log.info("Deleted all {} research groups", count);
+        return count;
     }
 }

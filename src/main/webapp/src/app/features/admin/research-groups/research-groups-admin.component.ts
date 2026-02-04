@@ -366,6 +366,17 @@ const CAMPUSES = [
         </ng-template>
       </p-dialog>
 
+      <div class="page-footer">
+        <p-button
+          label="Alle Daten löschen"
+          icon="pi pi-trash"
+          severity="danger"
+          [outlined]="true"
+          (onClick)="confirmDeleteAll()"
+          [loading]="deletingAll()"
+        />
+      </div>
+
       <p-confirmDialog />
       <p-toast />
     </div>
@@ -565,6 +576,14 @@ const CAMPUSES = [
         }
       }
     }
+
+    .page-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--p-surface-200);
+    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -576,6 +595,7 @@ export class ResearchGroupsAdminComponent implements OnInit {
   readonly researchGroups = signal<ResearchGroup[]>([]);
   readonly loading = signal(false);
   readonly assigningPositions = signal(false);
+  readonly deletingAll = signal(false);
   readonly dialogVisible = signal(false);
   readonly editingId = signal<string | null>(null);
   readonly importResultVisible = signal(false);
@@ -718,6 +738,19 @@ export class ResearchGroupsAdminComponent implements OnInit {
     });
   }
 
+  confirmDeleteAll(): void {
+    this.confirmationService.confirm({
+      message:
+        'Möchten Sie wirklich ALLE Forschungsgruppen löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
+      header: 'Alle Daten löschen',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Ja, alle löschen',
+      rejectLabel: 'Abbrechen',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => this.deleteAllResearchGroups(),
+    });
+  }
+
   onCsvUpload(event: FileUploadHandlerEvent): void {
     const file = event.files[0];
     if (!file) return;
@@ -790,6 +823,29 @@ export class ResearchGroupsAdminComponent implements OnInit {
           severity: 'error',
           summary: 'Fehler',
           detail: err.error?.message || 'Forschungsgruppe konnte nicht archiviert werden',
+        });
+      },
+    });
+  }
+
+  private deleteAllResearchGroups(): void {
+    this.deletingAll.set(true);
+    this.researchGroupService.deleteAll().subscribe({
+      next: (result) => {
+        this.deletingAll.set(false);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Erfolg',
+          detail: `${result.deleted} Forschungsgruppen wurden gelöscht`,
+        });
+        this.loadResearchGroups();
+      },
+      error: (err) => {
+        this.deletingAll.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Fehler',
+          detail: err.error?.message || 'Forschungsgruppen konnten nicht gelöscht werden',
         });
       },
     });

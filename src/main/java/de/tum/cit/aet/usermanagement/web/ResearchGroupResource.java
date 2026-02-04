@@ -161,4 +161,25 @@ public class ResearchGroupResource {
 
         return ResponseEntity.ok(researchGroupMatchingService.batchAssignPositions());
     }
+
+    /**
+     * Deletes all research groups.
+     * Admin only. This is a destructive operation.
+     *
+     * @return the number of deleted research groups
+     */
+    @DeleteMapping
+    public ResponseEntity<DeleteAllResult> deleteAllResearchGroups() {
+        if (!currentUserProvider.isAdmin()) {
+            return ResponseEntity.status(403).build();
+        }
+
+        int count = researchGroupService.deleteAll();
+        return ResponseEntity.ok(new DeleteAllResult(count));
+    }
+
+    /**
+     * Result of deleting all research groups.
+     */
+    public record DeleteAllResult(int deleted) {}
 }
