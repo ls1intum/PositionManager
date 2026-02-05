@@ -144,6 +144,11 @@ export class PositionsPageComponent implements OnInit {
       },
       error: () => {
         this.loading.set(false);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Fehler',
+          detail: 'Fehler beim Laden der Stellen',
+        });
       },
     });
   }

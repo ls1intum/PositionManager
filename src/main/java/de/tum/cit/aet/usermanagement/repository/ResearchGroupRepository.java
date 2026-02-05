@@ -66,6 +66,15 @@ public interface ResearchGroupRepository extends JpaRepository<ResearchGroup, UU
             """)
     int countPositionsByResearchGroupId(@Param("researchGroupId") UUID researchGroupId);
 
+    /**
+     * Returns position counts for all non-archived research groups in a single query.
+     * Each element is an Object[] with [0] = research group ID (UUID), [1] = count (Long).
+     *
+     * @return list of [researchGroupId, positionCount] pairs
+     */
+    @Query("SELECT rg.id, COUNT(p) FROM ResearchGroup rg LEFT JOIN Position p ON p.researchGroup = rg WHERE rg.archived = false GROUP BY rg.id")
+    List<Object[]> countPositionsPerGroup();
+
     boolean existsByName(String name);
 
     boolean existsByAbbreviation(String abbreviation);

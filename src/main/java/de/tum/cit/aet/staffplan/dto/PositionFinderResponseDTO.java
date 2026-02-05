@@ -20,17 +20,4 @@ public record PositionFinderResponseDTO(
         int totalMatchesFound,
         List<PositionMatchDTO> matches,
         List<SplitSuggestionDTO> splitSuggestions
-) {
-    /**
-     * Constructor without split suggestions (for backward compatibility).
-     */
-    public PositionFinderResponseDTO(
-            BigDecimal employeeMonthlyCost,
-            String employeeGrade,
-            int fillPercentage,
-            int totalMatchesFound,
-            List<PositionMatchDTO> matches
-    ) {
-        this(employeeMonthlyCost, employeeGrade, fillPercentage, totalMatchesFound, matches, List.of());
-    }
-}
+) {}

@@ -41,10 +41,6 @@ export class UserService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/v2/users`;
 
-  getCurrentUser(): Observable<UserDTO> {
-    return this.http.get<UserDTO>(`${this.apiUrl}/me`);
-  }
-
   getAllUsers(params: UserSearchParams = {}): Observable<PagedResponse<UserDTO>> {
     let httpParams = new HttpParams()
       .set('page', (params.page ?? 0).toString())

@@ -19,14 +19,6 @@ export class GradeValueService {
     return this.http.get<GradeValue[]>(this.apiUrl, { params });
   }
 
-  getById(id: string): Observable<GradeValue> {
-    return this.http.get<GradeValue>(`${this.apiUrl}/${id}`);
-  }
-
-  getGradesInUse(): Observable<string[]> {
-    return this.http.get<string[]>(`${this.apiUrl}/in-use`);
-  }
-
   create(gradeValue: Partial<GradeValue>): Observable<GradeValue> {
     return this.http.post<GradeValue>(this.apiUrl, gradeValue);
   }

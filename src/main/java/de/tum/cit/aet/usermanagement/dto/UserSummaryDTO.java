@@ -34,10 +34,4 @@ public record UserSummaryDTO(
         );
     }
 
-    /**
-     * Checks if the user has ever logged in.
-     */
-    public boolean hasLoggedIn() {
-        return lastLoginAt != null;
-    }
 }

@@ -23,14 +23,6 @@ export class ResearchGroupService {
     return this.http.get<ResearchGroup[]>(this.apiUrl, { params });
   }
 
-  getById(id: string): Observable<ResearchGroup> {
-    return this.http.get<ResearchGroup>(`${this.apiUrl}/${id}`);
-  }
-
-  getWithoutHead(): Observable<ResearchGroup[]> {
-    return this.http.get<ResearchGroup[]>(`${this.apiUrl}/without-head`);
-  }
-
   create(researchGroup: Partial<ResearchGroup>): Observable<ResearchGroup> {
     return this.http.post<ResearchGroup>(this.apiUrl, researchGroup);
   }

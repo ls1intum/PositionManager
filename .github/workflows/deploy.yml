@@ -33,6 +33,6 @@ jobs:
       environment: ${{ inputs.environment_name }}
       docker-compose-file: './docker/docker-compose-prod.yml'
       main-image-name: ghcr.io/ls1intum/staffplan-server
-      image-tag: ${{ inputs.image-tag }}
+      image-tag: ${{ inputs.commit_sha }}
       deployment-base-path: '/opt/staffplan'
     secrets: inherit

@@ -55,17 +55,3 @@ export interface TimeSlice {
   assignments: EmployeeAssignment[];
 }
 
-export interface GanttSegment {
-  startPercent: number;
-  widthPercent: number;
-  fillPercentage: number;
-  assignments: EmployeeAssignment[];
-  isGap: boolean;
-}
-
-export interface GanttBandRow {
-  position: GroupedPosition;
-  segments: GanttSegment[];
-  totalCurrentFill: number;
-  hasGaps: boolean;
-}

@@ -9,8 +9,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -140,8 +138,8 @@ class PositionFinderResourceTest extends AbstractRestIntegrationTest {
     class SearchValidationTests {
 
         @Test
-        @DisplayName("Invalid grade throws IllegalArgumentException")
-        void searchPositions_invalidGrade_throwsException() {
+        @DisplayName("Invalid grade returns 400")
+        void searchPositions_invalidGrade_returns400() throws Exception {
             setAdminUser();
             PositionFinderRequestDTO invalidRequest = new PositionFinderRequestDTO(
                     LocalDate.of(2025, 1, 1),
@@ -152,13 +150,14 @@ class PositionFinderResourceTest extends AbstractRestIntegrationTest {
                     null
             );
 
-            // IllegalArgumentException is thrown during request processing
-            assertThrows(Exception.class, () -> postJson(SEARCH_URL, invalidRequest));
+            // IllegalArgumentException is caught by GlobalExceptionHandler and returns 400
+            postJson(SEARCH_URL, invalidRequest)
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
-        @DisplayName("Missing start date throws IllegalArgumentException")
-        void searchPositions_missingStartDate_throwsException() {
+        @DisplayName("Missing start date returns 400")
+        void searchPositions_missingStartDate_returns400() throws Exception {
             setAdminUser();
             PositionFinderRequestDTO invalidRequest = new PositionFinderRequestDTO(
                     null,
@@ -169,12 +168,13 @@ class PositionFinderResourceTest extends AbstractRestIntegrationTest {
                     null
             );
 
-            assertThrows(Exception.class, () -> postJson(SEARCH_URL, invalidRequest));
+            postJson(SEARCH_URL, invalidRequest)
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
-        @DisplayName("Missing end date throws IllegalArgumentException")
-        void searchPositions_missingEndDate_throwsException() {
+        @DisplayName("Missing end date returns 400")
+        void searchPositions_missingEndDate_returns400() throws Exception {
             setAdminUser();
             PositionFinderRequestDTO invalidRequest = new PositionFinderRequestDTO(
                     LocalDate.of(2025, 1, 1),
@@ -185,12 +185,13 @@ class PositionFinderResourceTest extends AbstractRestIntegrationTest {
                     null
             );
 
-            assertThrows(Exception.class, () -> postJson(SEARCH_URL, invalidRequest));
+            postJson(SEARCH_URL, invalidRequest)
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
-        @DisplayName("Invalid fill percentage throws IllegalArgumentException")
-        void searchPositions_invalidFillPercentage_throwsException() {
+        @DisplayName("Invalid fill percentage returns 400")
+        void searchPositions_invalidFillPercentage_returns400() throws Exception {
             setAdminUser();
             PositionFinderRequestDTO invalidRequest = new PositionFinderRequestDTO(
                     LocalDate.of(2025, 1, 1),
@@ -201,7 +202,8 @@ class PositionFinderResourceTest extends AbstractRestIntegrationTest {
                     null
             );
 
-            assertThrows(Exception.class, () -> postJson(SEARCH_URL, invalidRequest));
+            postJson(SEARCH_URL, invalidRequest)
+                    .andExpect(status().isBadRequest());
         }
     }
 

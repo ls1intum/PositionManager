@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @DisplayName("Research Group REST API Tests")
@@ -146,12 +145,13 @@ class ResearchGroupResourceTest extends AbstractRestIntegrationTest {
         }
 
         @Test
-        @DisplayName("Non-existent ID throws exception")
-        void getResearchGroup_notFound_throwsException() {
+        @DisplayName("Non-existent ID returns 400")
+        void getResearchGroup_notFound_returns400() throws Exception {
             setAdminUser();
 
-            // ResourceNotFoundException is thrown but not handled globally
-            assertThrows(Exception.class, () -> get(BASE_URL + "/" + UUID.randomUUID()));
+            // IllegalArgumentException is caught by GlobalExceptionHandler and returns 400
+            get(BASE_URL + "/" + UUID.randomUUID())
+                    .andExpect(status().isBadRequest());
         }
 
         @Test

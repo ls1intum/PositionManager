@@ -16,6 +16,7 @@ export interface User {
 
 @Injectable({ providedIn: 'root' })
 export class SecurityStore {
+  private readonly platformId = inject(PLATFORM_ID);
   private readonly keycloakService = inject(KeycloakService);
   private readonly http = inject(HttpClient);
 
@@ -35,7 +36,7 @@ export class SecurityStore {
   }
 
   async onInit() {
-    const isServer = isPlatformServer(inject(PLATFORM_ID));
+    const isServer = isPlatformServer(this.platformId);
     if (isServer) {
       this.user.set(undefined);
       return;
@@ -61,10 +62,6 @@ export class SecurityStore {
 
   hasRole(role: string): boolean {
     return this.user()?.roles.includes(role) ?? false;
-  }
-
-  get token() {
-    return this.keycloakService.bearer;
   }
 
   private async fetchUser(): Promise<void> {

@@ -37,10 +37,6 @@ public class CurrentUserProvider {
       return cachedUser;
    }
 
-   public boolean isAnonymous() {
-      return getUser().hasNoGroup();
-   }
-
    public boolean isEmployee() {
       return getUser().hasAnyGroup("employee");
    }

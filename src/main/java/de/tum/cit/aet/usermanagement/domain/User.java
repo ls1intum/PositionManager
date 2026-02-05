@@ -116,17 +116,4 @@ public class User {
         return false;
     }
 
-    /**
-     * Checks if the given user has full access to this user's data.
-     *
-     * @param user the user to check access for
-     * @return true if the user has full access
-     */
-    public boolean hasFullAccess(User user) {
-        if (user.hasAnyGroup("admin", "job_manager")) {
-            return true;
-        }
-
-        return id.equals(user.getId());
-    }
 }

@@ -47,9 +47,10 @@ public class ResearchGroupService {
      * @return list of research group DTOs
      */
     public List<ResearchGroupDTO> getAllResearchGroups() {
+        Map<UUID, Integer> positionCounts = loadPositionCountsMap();
         return researchGroupRepository.findAllWithAliasesNotArchived()
                 .stream()
-                .map(rg -> ResearchGroupDTO.fromEntity(rg, researchGroupRepository.countPositionsByResearchGroupId(rg.getId())))
+                .map(rg -> ResearchGroupDTO.fromEntity(rg, positionCounts.getOrDefault(rg.getId(), 0)))
                 .toList();
     }
 
@@ -60,10 +61,25 @@ public class ResearchGroupService {
      * @return list of matching research group DTOs
      */
     public List<ResearchGroupDTO> searchResearchGroups(String search) {
+        Map<UUID, Integer> positionCounts = loadPositionCountsMap();
         return researchGroupRepository.searchWithAliases(search)
                 .stream()
-                .map(rg -> ResearchGroupDTO.fromEntity(rg, researchGroupRepository.countPositionsByResearchGroupId(rg.getId())))
+                .map(rg -> ResearchGroupDTO.fromEntity(rg, positionCounts.getOrDefault(rg.getId(), 0)))
                 .toList();
+    }
+
+    /**
+     * Loads position counts for all non-archived research groups in a single query.
+     *
+     * @return map from research group ID to position count
+     */
+    private Map<UUID, Integer> loadPositionCountsMap() {
+        return researchGroupRepository.countPositionsPerGroup()
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (UUID) row[0],
+                        row -> ((Long) row[1]).intValue()
+                ));
     }
 
     /**

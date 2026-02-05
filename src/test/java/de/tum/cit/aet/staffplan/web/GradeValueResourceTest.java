@@ -12,7 +12,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @DisplayName("Grade Value REST API Tests")
@@ -346,12 +345,13 @@ class GradeValueResourceTest extends AbstractRestIntegrationTest {
         }
 
         @Test
-        @DisplayName("Deleting non-existent grade throws exception")
-        void deleteGradeValue_notFound_throwsException() {
+        @DisplayName("Deleting non-existent grade returns 400")
+        void deleteGradeValue_notFound_returns400() throws Exception {
             setAdminUser();
 
             // The service throws IllegalArgumentException for non-existent IDs
-            assertThrows(Exception.class, () -> delete(BASE_URL + "/" + UUID.randomUUID()));
+            delete(BASE_URL + "/" + UUID.randomUUID())
+                    .andExpect(status().isBadRequest());
         }
     }
 

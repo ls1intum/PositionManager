@@ -13,9 +13,6 @@ import java.util.List;
 @ConfigurationProperties(prefix = "staffplan")
 public class StaffPlanProperties {
 
-    private String user;
-    private String password;
-    private String initialAdmin;
     private Cors cors = new Cors();
 
     @Setter
