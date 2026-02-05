@@ -584,19 +584,7 @@ A: Your login session has timed out. Simply refresh the page and log in again.
 
 ---
 
-## Getting Help
-
-If you encounter issues not covered in this guide:
-
-| Issue Type | Who to Contact |
-|------------|----------------|
-| **Cannot log in** | Your IT department or helpdesk |
-| **Need access to a feature** | Your supervisor or a StaffPlan administrator |
-| **Found a bug or error** | Report through your institution's ticketing system |
-| **Need a new role assigned** | Contact a StaffPlan administrator |
-| **Data looks incorrect** | Contact your Job Manager or administrator |
-
-### Quick Tips
+## Quick Tips
 
 - **Bookmark the application**: Save the StaffPlan URL for easy access
 - **Use filters**: If pages load slowly, use filters to reduce the displayed data

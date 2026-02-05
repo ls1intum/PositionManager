@@ -584,19 +584,7 @@ A: Ihre Anmeldesitzung ist abgelaufen. Aktualisieren Sie einfach die Seite und m
 
 ---
 
-## Hilfe erhalten
-
-Wenn Sie auf Probleme stoßen, die in diesem Handbuch nicht behandelt werden:
-
-| Problemtyp | Wen kontaktieren |
-|------------|------------------|
-| **Kann mich nicht anmelden** | Ihre IT-Abteilung oder den Helpdesk |
-| **Benötige Zugriff auf eine Funktion** | Ihren Vorgesetzten oder einen StaffPlan-Administrator |
-| **Fehler oder Bug gefunden** | Über das Ticketsystem Ihrer Einrichtung melden |
-| **Benötige eine neue Rolle** | Kontaktieren Sie einen StaffPlan-Administrator |
-| **Daten sehen falsch aus** | Kontaktieren Sie Ihren Stellenverwalter oder Administrator |
-
-### Schnelle Tipps
+## Schnelle Tipps
 
 - **Setzen Sie ein Lesezeichen für die Anwendung**: Speichern Sie die StaffPlan-URL für einfachen Zugriff
 - **Verwenden Sie Filter**: Wenn Seiten langsam laden, verwenden Sie Filter, um die angezeigten Daten zu reduzieren
