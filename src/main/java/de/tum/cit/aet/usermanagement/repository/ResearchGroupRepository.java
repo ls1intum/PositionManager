@@ -2,9 +2,11 @@ package de.tum.cit.aet.usermanagement.repository;
 
 import de.tum.cit.aet.usermanagement.domain.ResearchGroup;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -69,4 +71,19 @@ public interface ResearchGroupRepository extends JpaRepository<ResearchGroup, UU
     boolean existsByAbbreviation(String abbreviation);
 
     boolean existsByHeadId(UUID headId);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE ResearchGroup rg SET rg.head = null WHERE rg.head.id = :userId")
+    void clearHeadByUserId(@Param("userId") UUID userId);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE ResearchGroup rg SET rg.createdBy = null WHERE rg.createdBy.id = :userId")
+    void clearCreatedByUserId(@Param("userId") UUID userId);
+
+    @Transactional
+    @Modifying
+    @Query("UPDATE ResearchGroup rg SET rg.updatedBy = null WHERE rg.updatedBy.id = :userId")
+    void clearUpdatedByUserId(@Param("userId") UUID userId);
 }

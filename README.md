@@ -233,6 +233,7 @@ StaffPlan/
 - Use Lombok annotations (`@Getter`, `@Setter`, `@RequiredArgsConstructor`)
 - DTOs are Java records with `fromEntity()` factory methods
 - Use `@Slf4j` for logging
+- Do **not** use `@Transactional` in service classes or controllers. Spring Boot's default auto-commit behavior is sufficient. The only exception is `@Transactional` on `@Modifying` repository query methods, which is required by Spring Data JPA.
 
 #### Adding a New Entity
 

@@ -15,11 +15,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @DisplayName("User REST API Tests")
@@ -343,15 +343,14 @@ class UserResourceTest extends AbstractRestIntegrationTest {
         }
 
         @Test
-        @DisplayName("Non-existent user throws exception")
-        void updateUserRoles_notFound_throwsException() {
+        @DisplayName("Non-existent user returns 404")
+        void updateUserRoles_notFound_returns404() throws Exception {
             setAdminUser();
 
             List<String> newRoles = List.of("professor");
 
-            // ResourceNotFoundException is thrown but not handled globally
-            assertThrows(Exception.class, () ->
-                    putJson(BASE_URL + "/" + UUID.randomUUID() + "/roles", newRoles));
+            putJson(BASE_URL + "/" + UUID.randomUUID() + "/roles", newRoles)
+                    .andExpect(status().isNotFound());
         }
     }
 
@@ -424,6 +423,173 @@ class UserResourceTest extends AbstractRestIntegrationTest {
             assertThat(finalState.getGroups())
                     .extracting(g -> g.getId().getRole())
                     .containsExactly("admin");
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /v2/users - Create User Tests")
+    class CreateUserTests {
+
+        @Test
+        @DisplayName("Admin can create a new user with roles")
+        void createUser_asAdmin_withRoles_succeeds() throws Exception {
+            setAdminUser();
+
+            Map<String, Object> dto = Map.of(
+                    "universityId", "new_user",
+                    "email", "newuser@test.tum.de",
+                    "firstName", "New",
+                    "lastName", "User",
+                    "roles", List.of("professor", "employee")
+            );
+
+            postJson(BASE_URL, dto)
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.universityId").value("new_user"))
+                    .andExpect(jsonPath("$.email").value("newuser@test.tum.de"))
+                    .andExpect(jsonPath("$.firstName").value("New"))
+                    .andExpect(jsonPath("$.lastName").value("User"))
+                    .andExpect(jsonPath("$.roles", containsInAnyOrder("professor", "employee")));
+
+            // Verify persisted to database
+            User created = userRepository.findByUniversityId("new_user").orElseThrow();
+            assertThat(created.getFirstName()).isEqualTo("New");
+            assertThat(created.getLastName()).isEqualTo("User");
+            assertThat(created.getGroups())
+                    .extracting(g -> g.getId().getRole())
+                    .containsExactlyInAnyOrder("professor", "employee");
+        }
+
+        @Test
+        @DisplayName("Admin can create user without roles")
+        void createUser_asAdmin_withoutRoles_succeeds() throws Exception {
+            setAdminUser();
+
+            Map<String, Object> dto = Map.of(
+                    "universityId", "no_role_user",
+                    "email", "norole@test.tum.de",
+                    "firstName", "NoRole",
+                    "lastName", "User",
+                    "roles", List.of()
+            );
+
+            postJson(BASE_URL, dto)
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.universityId").value("no_role_user"))
+                    .andExpect(jsonPath("$.roles", hasSize(0)));
+        }
+
+        @Test
+        @DisplayName("Duplicate universityId returns 400")
+        void createUser_duplicateUniversityId_returns400() throws Exception {
+            setAdminUser();
+
+            Map<String, Object> dto = Map.of(
+                    "universityId", "db_admin",
+                    "email", "duplicate@test.tum.de",
+                    "firstName", "Duplicate",
+                    "lastName", "User",
+                    "roles", List.of()
+            );
+
+            postJson(BASE_URL, dto)
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("Professor gets 403 forbidden")
+        void createUser_asProfessor_returns403() throws Exception {
+            setProfessorUser();
+
+            Map<String, Object> dto = Map.of(
+                    "universityId", "prof_created",
+                    "email", "prof@test.tum.de",
+                    "firstName", "Prof",
+                    "lastName", "Created",
+                    "roles", List.of()
+            );
+
+            postJson(BASE_URL, dto)
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @DisplayName("Employee gets 403 forbidden")
+        void createUser_asEmployee_returns403() throws Exception {
+            setEmployeeUser();
+
+            Map<String, Object> dto = Map.of(
+                    "universityId", "emp_created",
+                    "email", "emp@test.tum.de",
+                    "firstName", "Emp",
+                    "lastName", "Created",
+                    "roles", List.of()
+            );
+
+            postJson(BASE_URL, dto)
+                    .andExpect(status().isForbidden());
+        }
+    }
+
+    @Nested
+    @DisplayName("DELETE /v2/users/{id} - Delete User Tests")
+    class DeleteUserTests {
+
+        @Test
+        @DisplayName("Admin can delete a user")
+        void deleteUser_asAdmin_succeeds() throws Exception {
+            setAdminUser();
+
+            delete(BASE_URL + "/" + testUser3.getId())
+                    .andExpect(status().isNoContent());
+
+            // Verify deleted from database
+            assertThat(userRepository.findById(testUser3.getId())).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Deleting user removes role assignments")
+        void deleteUser_removesRoleAssignments() throws Exception {
+            setAdminUser();
+
+            UUID userId = testUser2.getId();
+
+            // Verify user has roles before deletion
+            User beforeDelete = userRepository.findById(userId).orElseThrow();
+            assertThat(beforeDelete.getGroups()).isNotEmpty();
+
+            delete(BASE_URL + "/" + userId)
+                    .andExpect(status().isNoContent());
+
+            // Verify user and roles are deleted
+            assertThat(userRepository.findById(userId)).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Non-existent user returns 404")
+        void deleteUser_notFound_returns404() throws Exception {
+            setAdminUser();
+
+            delete(BASE_URL + "/" + UUID.randomUUID())
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("Professor gets 403 forbidden")
+        void deleteUser_asProfessor_returns403() throws Exception {
+            setProfessorUser();
+
+            delete(BASE_URL + "/" + testUser3.getId())
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        @DisplayName("Employee gets 403 forbidden")
+        void deleteUser_asEmployee_returns403() throws Exception {
+            setEmployeeUser();
+
+            delete(BASE_URL + "/" + testUser3.getId())
+                    .andExpect(status().isForbidden());
         }
     }
 }

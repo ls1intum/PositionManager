@@ -28,6 +28,14 @@ export interface UserSearchParams {
   role?: string;
 }
 
+export interface CreateUserDTO {
+  universityId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  roles: string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly http = inject(HttpClient);
@@ -54,5 +62,13 @@ export class UserService {
 
   updateUserRoles(userId: string, roles: string[]): Observable<UserDTO> {
     return this.http.put<UserDTO>(`${this.apiUrl}/${userId}/roles`, roles);
+  }
+
+  createUser(dto: CreateUserDTO): Observable<UserDTO> {
+    return this.http.post<UserDTO>(this.apiUrl, dto);
+  }
+
+  deleteUser(userId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${userId}`);
   }
 }

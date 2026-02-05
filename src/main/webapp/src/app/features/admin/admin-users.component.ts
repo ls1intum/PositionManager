@@ -19,7 +19,11 @@ import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
-import { UserService, UserDTO, SecurityStore } from '../../core/security';
+import { Dialog } from 'primeng/dialog';
+import { ConfirmDialog } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { Toast } from 'primeng/toast';
+import { UserService, UserDTO, SecurityStore, CreateUserDTO } from '../../core/security';
 
 const AVAILABLE_ROLES = ['admin', 'job_manager', 'professor', 'employee'] as const;
 
@@ -38,6 +42,24 @@ const ROLE_OPTIONS = [
   { label: 'Mitarbeiter', value: 'employee' },
 ];
 
+interface CreateUserFormData {
+  universityId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  roles: Set<string>;
+}
+
+function getEmptyFormData(): CreateUserFormData {
+  return {
+    universityId: '',
+    email: '',
+    firstName: '',
+    lastName: '',
+    roles: new Set<string>(),
+  };
+}
+
 @Component({
   selector: 'app-admin-users',
   imports: [
@@ -52,7 +74,11 @@ const ROLE_OPTIONS = [
     Select,
     IconField,
     InputIcon,
+    Dialog,
+    ConfirmDialog,
+    Toast,
   ],
+  providers: [ConfirmationService, MessageService],
   template: `
     <div class="admin-users-page">
       <div class="page-header">
@@ -78,12 +104,15 @@ const ROLE_OPTIONS = [
             styleClass="role-filter"
           />
         </div>
-        <p-button
-          label="Aktualisieren"
-          icon="pi pi-refresh"
-          [outlined]="true"
-          (onClick)="loadUsers()"
-        />
+        <div class="header-actions">
+          <p-button
+            label="Aktualisieren"
+            icon="pi pi-refresh"
+            [outlined]="true"
+            (onClick)="loadUsers()"
+          />
+          <p-button label="Hinzufügen" icon="pi pi-plus" (onClick)="openCreateDialog()" />
+        </div>
       </div>
 
       <div class="table-container">
@@ -146,13 +175,24 @@ const ROLE_OPTIONS = [
                 </div>
               </td>
               <td>
-                <p-button
-                  label="Speichern"
-                  icon="pi pi-check"
-                  size="small"
-                  [disabled]="!hasChanges(user)"
-                  (onClick)="saveUser(user)"
-                />
+                <div class="action-buttons">
+                  <p-button
+                    label="Speichern"
+                    icon="pi pi-check"
+                    size="small"
+                    [disabled]="!hasChanges(user)"
+                    (onClick)="saveUser(user)"
+                  />
+                  <p-button
+                    icon="pi pi-trash"
+                    severity="danger"
+                    size="small"
+                    [rounded]="true"
+                    [text]="true"
+                    pTooltip="Benutzer löschen"
+                    (onClick)="confirmDelete(user)"
+                  />
+                </div>
               </td>
             </tr>
           </ng-template>
@@ -164,6 +204,84 @@ const ROLE_OPTIONS = [
         </p-table>
       </div>
     </div>
+
+    <p-dialog
+      header="Benutzer erstellen"
+      [(visible)]="dialogVisible"
+      [modal]="true"
+      [style]="{ width: '500px' }"
+    >
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="create-universityId">Kennung *</label>
+          <input
+            pInputText
+            id="create-universityId"
+            [(ngModel)]="formData.universityId"
+            placeholder="z.B. ab12cde"
+            required
+          />
+        </div>
+        <div class="form-field">
+          <label for="create-firstName">Vorname *</label>
+          <input
+            pInputText
+            id="create-firstName"
+            [(ngModel)]="formData.firstName"
+            placeholder="Vorname"
+            required
+          />
+        </div>
+        <div class="form-field">
+          <label for="create-lastName">Nachname *</label>
+          <input
+            pInputText
+            id="create-lastName"
+            [(ngModel)]="formData.lastName"
+            placeholder="Nachname"
+            required
+          />
+        </div>
+        <div class="form-field">
+          <label for="create-email">E-Mail</label>
+          <input
+            pInputText
+            id="create-email"
+            type="email"
+            [(ngModel)]="formData.email"
+            placeholder="E-Mail-Adresse"
+          />
+        </div>
+        <div class="form-field">
+          <span class="field-label">Rollen</span>
+          <div class="roles-container">
+            @for (role of availableRoles; track role) {
+              <div class="role-checkbox">
+                <p-checkbox
+                  [binary]="true"
+                  [ngModel]="formData.roles.has(role)"
+                  (ngModelChange)="toggleFormRole(role, $event)"
+                  [inputId]="'create-role-' + role"
+                />
+                <label [for]="'create-role-' + role">{{ formatRole(role) }}</label>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+      <ng-template #footer>
+        <p-button label="Abbrechen" [text]="true" (onClick)="closeDialog()" />
+        <p-button
+          label="Erstellen"
+          icon="pi pi-check"
+          [disabled]="!isFormValid()"
+          (onClick)="createUser()"
+        />
+      </ng-template>
+    </p-dialog>
+
+    <p-confirmDialog />
+    <p-toast />
   `,
   styles: `
     :host {
@@ -207,6 +325,12 @@ const ROLE_OPTIONS = [
       }
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
     :host ::ng-deep .role-filter {
       width: 180px;
     }
@@ -233,6 +357,12 @@ const ROLE_OPTIONS = [
       gap: 0.5rem;
     }
 
+    .action-buttons {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
     .login-date {
       color: var(--p-text-color);
       cursor: default;
@@ -243,6 +373,28 @@ const ROLE_OPTIONS = [
       padding: 2rem;
       color: var(--p-text-muted-color);
     }
+
+    .form-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      label,
+      .field-label {
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+
+      input {
+        width: 100%;
+      }
+    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -250,6 +402,8 @@ export class AdminUsersComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly securityStore = inject(SecurityStore);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly messageService = inject(MessageService);
 
   private readonly searchSubject = new Subject<string>();
 
@@ -260,6 +414,9 @@ export class AdminUsersComponent implements OnInit {
   readonly currentPage = signal(0);
   readonly searchTerm = signal('');
   readonly filterRole = signal<string | null>(null);
+
+  dialogVisible = false;
+  formData: CreateUserFormData = getEmptyFormData();
 
   readonly availableRoles = AVAILABLE_ROLES;
   readonly roleOptions = ROLE_OPTIONS;
@@ -358,14 +515,112 @@ export class AdminUsersComponent implements OnInit {
         this.users.update((users) => users.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
         // Update pending changes to match saved state
         this.pendingChanges.set(updatedUser.id, new Set(updatedUser.roles));
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Erfolg',
+          detail: 'Benutzerrollen wurden aktualisiert',
+        });
 
         // If the current user's roles were updated, refresh the page to update permissions
         if (updatedUser.id === this.securityStore.user()?.id) {
           window.location.reload();
         }
       },
-      error: (err) => {
-        console.error('Failed to update user roles:', err);
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Fehler',
+          detail: 'Benutzerrollen konnten nicht aktualisiert werden',
+        });
+      },
+    });
+  }
+
+  openCreateDialog(): void {
+    this.formData = getEmptyFormData();
+    this.dialogVisible = true;
+  }
+
+  closeDialog(): void {
+    this.dialogVisible = false;
+  }
+
+  isFormValid(): boolean {
+    return (
+      this.formData.universityId.trim().length > 0 &&
+      this.formData.firstName.trim().length > 0 &&
+      this.formData.lastName.trim().length > 0
+    );
+  }
+
+  toggleFormRole(role: string, checked: boolean): void {
+    if (checked) {
+      this.formData.roles.add(role);
+    } else {
+      this.formData.roles.delete(role);
+    }
+  }
+
+  createUser(): void {
+    const dto: CreateUserDTO = {
+      universityId: this.formData.universityId.trim(),
+      email: this.formData.email.trim(),
+      firstName: this.formData.firstName.trim(),
+      lastName: this.formData.lastName.trim(),
+      roles: Array.from(this.formData.roles),
+    };
+    this.userService.createUser(dto).subscribe({
+      next: () => {
+        this.dialogVisible = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Erfolg',
+          detail: `Benutzer "${dto.universityId}" wurde erstellt`,
+        });
+        this.loadUsers();
+      },
+      error: (err: { status: number }) => {
+        const detail =
+          err.status === 400
+            ? 'Ein Benutzer mit dieser Kennung existiert bereits oder die Eingaben sind ungültig'
+            : 'Benutzer konnte nicht erstellt werden';
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Fehler',
+          detail,
+        });
+      },
+    });
+  }
+
+  confirmDelete(user: UserDTO): void {
+    this.confirmationService.confirm({
+      message: `Möchten Sie den Benutzer "${user.firstName} ${user.lastName}" (${user.universityId}) wirklich löschen?`,
+      header: 'Löschen bestätigen',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Ja',
+      rejectLabel: 'Nein',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => this.deleteUser(user),
+    });
+  }
+
+  deleteUser(user: UserDTO): void {
+    this.userService.deleteUser(user.id).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Erfolg',
+          detail: `Benutzer "${user.firstName} ${user.lastName}" wurde gelöscht`,
+        });
+        this.loadUsers();
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Fehler',
+          detail: 'Benutzer konnte nicht gelöscht werden',
+        });
       },
     });
   }

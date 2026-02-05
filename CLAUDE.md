@@ -51,6 +51,7 @@ Follows standard layered architecture: Web (REST controllers) → Service → Re
 - **app.routes.ts**: Lazy-loaded routes with auth guards
 
 ### Key Patterns
+- **No `@Transactional` in server code**: Do NOT use `@Transactional` in service classes or controllers. Spring Boot's default auto-commit behavior is sufficient. The only exception is `@Transactional` on `@Modifying` repository query methods, which is required by Spring Data JPA.
 - **DTOs**: Java records with `fromEntity()` factory methods
 - **State Management**: Angular Signals (no NgRx) via `SecurityStore`
 - **Change Detection**: OnPush everywhere with `signal()`, `computed()`, `input()`, `output()`
