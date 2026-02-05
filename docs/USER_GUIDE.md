@@ -239,6 +239,9 @@ The system returns up to 8 suggestions, preferring:
 
 The search results show matching positions sorted by their overall score:
 
+![Position Finder Results](images/position-finder-result.jpg)
+*Search results showing matching positions with quality ratings and key metrics*
+
 #### Match Quality Indicators
 
 Each result displays a quality rating based on its score:

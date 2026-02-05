@@ -10,7 +10,7 @@ The following screenshots are referenced in the User Guide:
 |----------|-------------|----------|
 | `positions-overview.png` | Gantt chart showing staff positions | `/positions` |
 | `position-finder-form.png` | Position Finder search form | `/position-finder` |
-| `position-finder-results.png` | Search results with matching positions | `/position-finder` (after search) |
+| `position-finder-result.jpg` | Search results with matching positions | `/position-finder` (after search) |
 
 ## How to Capture Screenshots
 

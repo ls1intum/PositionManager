@@ -239,6 +239,9 @@ Das System gibt bis zu 8 Vorschläge zurück und bevorzugt:
 
 Die Suchergebnisse zeigen passende Stellen sortiert nach ihrer Gesamtpunktzahl:
 
+![Stellensuche-Ergebnisse](images/position-finder-result.jpg)
+*Suchergebnisse mit passenden Stellen, Qualitätsbewertungen und wichtigen Kennzahlen*
+
 #### Übereinstimmungsqualitäts-Indikatoren
 
 Jedes Ergebnis zeigt eine Qualitätsbewertung basierend auf seiner Punktzahl:
