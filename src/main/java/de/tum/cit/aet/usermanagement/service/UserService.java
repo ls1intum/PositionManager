@@ -47,23 +47,33 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
-        // Delete existing roles
-        userGroupRepository.deleteByUserId(userId);
+        // Get current roles
+        Set<String> currentRoles = user.getGroups().stream()
+                .map(ug -> ug.getId().getRole())
+                .collect(java.util.stream.Collectors.toSet());
+        Set<String> newRoles = new HashSet<>(roles);
 
-        // Create new roles
-        Set<UserGroup> userGroups = new HashSet<>();
-        for (String role : roles) {
-            UserGroup group = new UserGroup();
-            UserGroupId groupId = new UserGroupId();
-            groupId.setUserId(userId);
-            groupId.setRole(role);
-            group.setId(groupId);
-            group.setUser(user);
-            userGroups.add(userGroupRepository.save(group));
+        // Remove roles that are no longer needed
+        for (UserGroup group : new HashSet<>(user.getGroups())) {
+            if (!newRoles.contains(group.getId().getRole())) {
+                user.getGroups().remove(group);
+                userGroupRepository.delete(group);
+            }
         }
 
-        user.setGroups(userGroups);
-        user = userRepository.save(user);
+        // Add new roles
+        for (String role : newRoles) {
+            if (!currentRoles.contains(role)) {
+                UserGroup group = new UserGroup();
+                UserGroupId groupId = new UserGroupId();
+                groupId.setUserId(userId);
+                groupId.setRole(role);
+                group.setId(groupId);
+                group.setUser(user);
+                user.getGroups().add(group);
+                userGroupRepository.save(group);
+            }
+        }
 
         return UserDTO.fromEntity(user);
     }
