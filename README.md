@@ -142,7 +142,7 @@ Pre-configured accounts for testing different roles:
 ## Project Structure
 
 ```
-StaffPlan/
+PositionManager/
 ├── docker/                          # Docker configuration
 │   ├── docker-compose.yml           # Development compose file
 │   ├── docker-compose-prod.yml      # Production compose file

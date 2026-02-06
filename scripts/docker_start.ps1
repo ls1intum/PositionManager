@@ -1,4 +1,4 @@
-﻿# StaffPlan Startup Script (Windows PowerShell)
+﻿# PositionManager Startup Script (Windows PowerShell)
 # This script starts all services using Docker containers
 
 $ErrorActionPreference = "Stop"
@@ -10,7 +10,7 @@ function Write-Yellow { Write-Host $args -ForegroundColor Yellow }
 function Write-Red { Write-Host $args -ForegroundColor Red }
 
 Write-Blue "========================================"
-Write-Blue "    Starting StaffPlan Application"
+Write-Blue "    Starting PositionManager Application"
 Write-Blue "    (Containerized Version)"
 Write-Blue "========================================"
 Write-Host ""
@@ -122,7 +122,7 @@ if (-not $clientReady) {
 # Summary
 Write-Host ""
 Write-Blue "========================================"
-Write-Green "✓ StaffPlan is now running!"
+Write-Green "✓ PositionManager is now running!"
 Write-Blue "========================================"
 Write-Yellow "Server:" -NoNewline
 Write-Host " http://localhost:8080"

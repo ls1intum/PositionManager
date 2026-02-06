@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# StaffPlan Startup Script
+# PositionManager Startup Script
 # This script starts all services using Docker containers
 
 set -e  # Exit on error
@@ -13,7 +13,7 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}    Starting StaffPlan Application${NC}"
+echo -e "${BLUE}    Starting PositionManager Application${NC}"
 echo -e "${BLUE}    (Containerized Version)${NC}"
 echo -e "${BLUE}========================================${NC}\n"
 
@@ -101,7 +101,7 @@ fi
 
 # Summary
 echo -e "\n${BLUE}========================================${NC}"
-echo -e "${GREEN}✓ StaffPlan is now running!${NC}"
+echo -e "${GREEN}✓ PositionManager is now running!${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo -e "${YELLOW}Server:${NC} http://localhost:8080"
 echo -e "${YELLOW}Client:${NC} http://localhost:5173"

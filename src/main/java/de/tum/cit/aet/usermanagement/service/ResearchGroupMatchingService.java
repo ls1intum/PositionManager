@@ -1,7 +1,7 @@
 package de.tum.cit.aet.usermanagement.service;
 
-import de.tum.cit.aet.staffplan.domain.Position;
-import de.tum.cit.aet.staffplan.repository.PositionRepository;
+import de.tum.cit.aet.positions.domain.Position;
+import de.tum.cit.aet.positions.repository.PositionRepository;
 import de.tum.cit.aet.usermanagement.domain.ResearchGroup;
 import de.tum.cit.aet.usermanagement.repository.ResearchGroupRepository;
 import lombok.RequiredArgsConstructor;

@@ -14,7 +14,7 @@ plugins {
 
 group = 'de.tum.cit.aet'
 version = '0.1.0'
-description = 'StaffPlan'
+description = 'PositionManager'
 
 java {
     toolchain {

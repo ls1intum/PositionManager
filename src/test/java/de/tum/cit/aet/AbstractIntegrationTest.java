@@ -1,10 +1,10 @@
 package de.tum.cit.aet;
 
 import de.tum.cit.aet.config.TestSecurityConfiguration;
-import de.tum.cit.aet.staffplan.domain.GradeValue;
-import de.tum.cit.aet.staffplan.repository.GradeValueRepository;
-import de.tum.cit.aet.staffplan.repository.PositionRepository;
-import de.tum.cit.aet.staffplan.service.PositionFinderService;
+import de.tum.cit.aet.positions.domain.GradeValue;
+import de.tum.cit.aet.positions.repository.GradeValueRepository;
+import de.tum.cit.aet.positions.repository.PositionRepository;
+import de.tum.cit.aet.positions.service.PositionFinderService;
 import de.tum.cit.aet.usermanagement.domain.User;
 import de.tum.cit.aet.usermanagement.repository.ResearchGroupRepository;
 import de.tum.cit.aet.usermanagement.repository.UserGroupRepository;

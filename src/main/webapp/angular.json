@@ -9,7 +9,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "StaffPlan": {
+    "PositionManager": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -70,10 +70,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "StaffPlan:build:production"
+              "buildTarget": "PositionManager:build:production"
             },
             "development": {
-              "buildTarget": "StaffPlan:build:development"
+              "buildTarget": "PositionManager:build:development"
             }
           },
           "defaultConfiguration": "development"
