@@ -14,6 +14,6 @@ RUN npm run build
 # Minimal image to hold the built files
 FROM alpine:3.21
 
-COPY --from=builder /app/dist/StaffPlan/browser /srv
+COPY --from=builder /app/dist/PositionManager/browser /srv
 
 CMD ["sh", "-c", "echo 'Static files ready in /srv' && sleep infinity"]
