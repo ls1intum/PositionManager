@@ -66,12 +66,7 @@ const CAMPUSES = [
           <h2>Forschungsgruppen</h2>
           <p-iconfield class="search-field">
             <p-inputicon styleClass="pi pi-search" />
-            <input
-              pInputText
-              type="text"
-              placeholder="Suchen..."
-              [formControl]="searchControl"
-            />
+            <input pInputText type="text" placeholder="Suchen..." [formControl]="searchControl" />
           </p-iconfield>
         </div>
         <div class="actions">
@@ -329,8 +324,7 @@ const CAMPUSES = [
 
           <div class="form-field full-width">
             <label for="description">Beschreibung</label>
-            <textarea pTextarea id="description" formControlName="description" rows="3">
-            </textarea>
+            <textarea pTextarea id="description" formControlName="description" rows="3"> </textarea>
           </div>
         </div>
 

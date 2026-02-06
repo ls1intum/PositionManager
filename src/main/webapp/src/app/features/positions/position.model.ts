@@ -54,4 +54,3 @@ export interface TimeSlice {
   totalFillPercentage: number;
   assignments: EmployeeAssignment[];
 }
-

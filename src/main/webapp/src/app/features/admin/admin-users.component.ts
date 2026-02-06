@@ -71,12 +71,7 @@ const ROLE_OPTIONS = [
           <h2>Benutzerverwaltung</h2>
           <p-iconfield class="search-field">
             <p-inputicon styleClass="pi pi-search" />
-            <input
-              pInputText
-              type="text"
-              placeholder="Suchen..."
-              [formControl]="searchControl"
-            />
+            <input pInputText type="text" placeholder="Suchen..." [formControl]="searchControl" />
           </p-iconfield>
           <p-select
             [options]="roleOptions"
@@ -412,7 +407,12 @@ export class AdminUsersComponent implements OnInit {
   readonly formRoles = signal(new Set<string>());
 
   // Signal-based form validity tracking
-  private readonly createFormValues = signal({ universityId: '', firstName: '', lastName: '', email: '' });
+  private readonly createFormValues = signal({
+    universityId: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+  });
   readonly isFormValid = computed(() => {
     const values = this.createFormValues();
     return (
@@ -449,16 +449,14 @@ export class AdminUsersComponent implements OnInit {
       });
 
     // Sync create form value changes to the signal for computed validity
-    this.createForm.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((values) => {
-        this.createFormValues.set({
-          universityId: values.universityId ?? '',
-          firstName: values.firstName ?? '',
-          lastName: values.lastName ?? '',
-          email: values.email ?? '',
-        });
+    this.createForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((values) => {
+      this.createFormValues.set({
+        universityId: values.universityId ?? '',
+        firstName: values.firstName ?? '',
+        lastName: values.lastName ?? '',
+        email: values.email ?? '',
       });
+    });
 
     this.loadUsers();
   }

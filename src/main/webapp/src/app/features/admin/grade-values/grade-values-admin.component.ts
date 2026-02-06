@@ -152,11 +152,7 @@ const GRADE_TYPES = [
         <div class="form-grid" [formGroup]="gradeForm">
           <div class="form-field">
             <label for="gradeCode">Besoldungsgruppe *</label>
-            <input
-              pInputText
-              id="gradeCode"
-              formControlName="gradeCode"
-            />
+            <input pInputText id="gradeCode" formControlName="gradeCode" />
           </div>
 
           <div class="form-field">
@@ -365,7 +361,11 @@ export class GradeValuesAdminComponent implements OnInit {
   readonly activeValue = signal(true);
 
   // Signal-based form values for computed validity
-  private readonly formValues = signal({ gradeCode: '', gradeType: 'E', monthlyValue: null as number | null });
+  private readonly formValues = signal({
+    gradeCode: '',
+    gradeType: 'E',
+    monthlyValue: null as number | null,
+  });
   readonly isFormValid = computed(() => {
     const values = this.formValues();
     return !!values.gradeCode && !!values.gradeType && values.monthlyValue !== null;
@@ -373,16 +373,14 @@ export class GradeValuesAdminComponent implements OnInit {
 
   ngOnInit(): void {
     // Sync form value changes to signal
-    this.gradeForm.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => {
-        const raw = this.gradeForm.getRawValue();
-        this.formValues.set({
-          gradeCode: raw.gradeCode ?? '',
-          gradeType: raw.gradeType ?? '',
-          monthlyValue: raw.monthlyValue ?? null,
-        });
+    this.gradeForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      const raw = this.gradeForm.getRawValue();
+      this.formValues.set({
+        gradeCode: raw.gradeCode ?? '',
+        gradeType: raw.gradeType ?? '',
+        monthlyValue: raw.monthlyValue ?? null,
       });
+    });
 
     this.loadGradeValues();
   }

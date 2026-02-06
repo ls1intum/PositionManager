@@ -730,16 +730,14 @@ export class PositionFinderPageComponent implements OnInit {
 
   ngOnInit(): void {
     // Sync form value changes to signal for computed validity
-    this.searchForm.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((values) => {
-        this.formValues.set({
-          selectedGrade: values.selectedGrade ?? '',
-          fillPercentage: values.fillPercentage ?? 50,
-          startDate: values.startDate ?? null,
-          endDate: values.endDate ?? null,
-        });
+    this.searchForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((values) => {
+      this.formValues.set({
+        selectedGrade: values.selectedGrade ?? '',
+        fillPercentage: values.fillPercentage ?? 50,
+        startDate: values.startDate ?? null,
+        endDate: values.endDate ?? null,
       });
+    });
 
     this.loadGrades();
     this.loadRelevanceTypes();
@@ -792,7 +790,8 @@ export class PositionFinderPageComponent implements OnInit {
       endDate: this.formatDate(endDate),
       employeeGrade: formValue.selectedGrade,
       fillPercentage: formValue.fillPercentage,
-      relevanceTypes: formValue.selectedRelevanceTypes.length > 0 ? formValue.selectedRelevanceTypes : null,
+      relevanceTypes:
+        formValue.selectedRelevanceTypes.length > 0 ? formValue.selectedRelevanceTypes : null,
     };
 
     this.positionFinderService.search(request).subscribe({
