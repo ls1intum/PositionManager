@@ -692,7 +692,7 @@ export class PositionFinderPageComponent implements OnInit {
     fillPercentage: 50 as number,
     startDate: null as Date | null,
     endDate: null as Date | null,
-    selectedRelevanceTypes: [] as string[],
+    selectedRelevanceTypes: this.fb.control<string[]>([]),
   });
 
   // Signal-based form values for computed validity

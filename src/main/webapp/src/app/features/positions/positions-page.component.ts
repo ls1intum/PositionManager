@@ -58,7 +58,7 @@ import { Position } from './position.model';
     </div>
   `,
   styles: `
-    :host {
+    app-positions-page {
       display: flex;
       flex-direction: column;
       flex: 1;

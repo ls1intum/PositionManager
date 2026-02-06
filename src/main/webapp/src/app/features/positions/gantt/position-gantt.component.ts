@@ -71,7 +71,7 @@ type ZoomLevel = 3 | 6 | 12 | 24 | 36 | 60;
   ],
   templateUrl: './position-gantt.component.html',
   styles: `
-    :host {
+    app-position-gantt {
       display: flex;
       flex-direction: column;
       flex: 1;
@@ -769,24 +769,21 @@ export class PositionGanttComponent {
 
   constructor() {
     // Initialize slider to show 1 year centered on today when data loads
-    effect(
-      () => {
-        const range = this.dataRange();
-        const totalDays = this.totalDataDays();
-        const now = this.today();
+    effect(() => {
+      const range = this.dataRange();
+      const totalDays = this.totalDataDays();
+      const now = this.today();
 
-        // Calculate today's position as days from min
-        const todayOffset = Math.max(0, this.daysBetween(range.min, now) - 1);
+      // Calculate today's position as days from min
+      const todayOffset = Math.max(0, this.daysBetween(range.min, now) - 1);
 
-        // Default: 6 months before and after today
-        const halfYear = 182;
-        const start = Math.max(0, todayOffset - halfYear);
-        const end = Math.min(totalDays, todayOffset + halfYear);
+      // Default: 6 months before and after today
+      const halfYear = 182;
+      const start = Math.max(0, todayOffset - halfYear);
+      const end = Math.min(totalDays, todayOffset + halfYear);
 
-        this.timelineRange.set([start, end]);
-      },
-      { allowSignalWrites: true },
-    );
+      this.timelineRange.set([start, end]);
+    });
   }
 
   // Computed: grouped positions

@@ -8,7 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { CurrencyPipe } from '@angular/common';
 import { Card } from 'primeng/card';
 import { TableModule } from 'primeng/table';
@@ -36,6 +36,7 @@ const GRADE_TYPES = [
 @Component({
   selector: 'app-grade-values-admin',
   imports: [
+    FormsModule,
     ReactiveFormsModule,
     CurrencyPipe,
     Card,
@@ -215,7 +216,8 @@ const GRADE_TYPES = [
 
           <div class="form-field full-width">
             <p-checkbox
-              [modelValue]="activeValue()"
+              [ngModel]="activeValue()"
+              [ngModelOptions]="{ standalone: true }"
               (onChange)="onActiveChange($event)"
               [binary]="true"
               inputId="active"

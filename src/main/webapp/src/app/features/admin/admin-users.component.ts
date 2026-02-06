@@ -9,7 +9,7 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
@@ -47,6 +47,7 @@ const ROLE_OPTIONS = [
 @Component({
   selector: 'app-admin-users',
   imports: [
+    FormsModule,
     ReactiveFormsModule,
     DatePipe,
     TableModule,
@@ -147,7 +148,7 @@ const ROLE_OPTIONS = [
                     <div class="role-checkbox">
                       <p-checkbox
                         [binary]="true"
-                        [modelValue]="hasRole(user, role)"
+                        [ngModel]="hasRole(user, role)"
                         (onChange)="toggleRole(user, role, $event)"
                         [inputId]="user.id + '-' + role"
                       />
@@ -238,7 +239,8 @@ const ROLE_OPTIONS = [
               <div class="role-checkbox">
                 <p-checkbox
                   [binary]="true"
-                  [modelValue]="formRoles().has(role)"
+                  [ngModel]="formRoles().has(role)"
+                  [ngModelOptions]="{ standalone: true }"
                   (onChange)="toggleFormRole(role, $event)"
                   [inputId]="'create-role-' + role"
                 />
@@ -263,7 +265,7 @@ const ROLE_OPTIONS = [
     <p-toast />
   `,
   styles: `
-    :host {
+    app-admin-users {
       display: flex;
       flex-direction: column;
       flex: 1;
