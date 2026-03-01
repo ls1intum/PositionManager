@@ -131,7 +131,7 @@ jobs:
           strip_components: 0
 
       - name: Pre-pull images
-        uses: appleboy/ssh-action@v1.2.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ vars.VM_HOST }}
           username: ${{ vars.VM_USERNAME }}
@@ -145,7 +145,7 @@ jobs:
             docker compose -f "/opt/staffplan/${{ steps.compose.outputs.basename }}" --env-file="/opt/staffplan/.env" pull
 
       - name: Stop application
-        uses: appleboy/ssh-action@v1.2.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ vars.VM_HOST }}
           username: ${{ vars.VM_USERNAME }}
@@ -167,7 +167,7 @@ jobs:
             fi
 
       - name: Start application
-        uses: appleboy/ssh-action@v1.2.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ vars.VM_HOST }}
           username: ${{ vars.VM_USERNAME }}
