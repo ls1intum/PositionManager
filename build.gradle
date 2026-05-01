@@ -78,7 +78,7 @@ dependencies {
     implementation "com.nimbusds:nimbus-jose-jwt:10.7"
 
     // Main database to persist entities
-    implementation 'org.postgresql:postgresql:42.7.9'
+    implementation 'org.postgresql:postgresql:42.7.11'
 
     // Keycloak admin client for user lookup via LDAP
     implementation 'org.keycloak:keycloak-admin-client:26.0.0'
