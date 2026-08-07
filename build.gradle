@@ -81,7 +81,7 @@ dependencies {
     implementation 'org.postgresql:postgresql:42.7.9'
 
     // Keycloak admin client for user lookup via LDAP
-    implementation 'org.keycloak:keycloak-admin-client:26.0.0'
+    implementation 'org.keycloak:keycloak-admin-client:26.0.12'
 
     // Lombok for boilerplate code reduction
     compileOnly 'org.projectlombok:lombok'
